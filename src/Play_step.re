@@ -81,6 +81,24 @@ let taller = ninesquare @ [
   (-1, -2)
 ];
 
+let hasCollision = (rect, blocks) => {
+  let x = int_of_float(rect.Geom.Rect.pos.x /. blockSize);
+  let y = int_of_float(rect.Geom.Rect.pos.y /. blockSize);
+  List.exists(
+    ((dx, dy)) => {
+      let x = x + dx; let y = y + dy;
+      if (Hashtbl.mem(blocks, (x,y))) {
+        let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
+        Geom.Rect.testAabb(rect, blockBox)
+      } else {
+        false
+      }
+    },
+    taller
+  )
+};
+
+
 let collide = (rect, vel, blocks) => {
   let x = int_of_float(rect.Geom.Rect.pos.x /. blockSize);
   let y = int_of_float(rect.Geom.Rect.pos.y /. blockSize);
@@ -91,8 +109,12 @@ let collide = (rect, vel, blocks) => {
         let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
         if (Geom.Rect.testAabb(moved, blockBox)) {
           /* let vel = Geom.Rect.collideToAabb(vel, moved, blockBox); */
-          let add = Geom.Rect.vectorToAabb(moved, blockBox);
+          /* let add = Geom.Rect.vectorToAabb(moved, blockBox); */
+          let add = Geom.Rect.collideToAabb(vel, moved, blockBox);
+          let prev = vel;
           let vel = Geom.addVectors(add, vel);
+          /** Fuzzing */
+          let vel = {Geom.magnitude: vel.Geom.magnitude +. 0.0001, theta: vel.Geom.theta};
           (Geom.Rect.push(rect, vel), vel)
         } else {
           (moved, vel)
@@ -137,7 +159,7 @@ let movePlayer = (userInput, player, blocks) => {
   let acc = userInput.left ? (vx > -. maxWalk ? Geom.{magnitude: walkSpeed, theta: pi} : Geom.v0) : (
     userInput.right ? (vx < maxWalk ? Geom.{magnitude: walkSpeed, theta: 0.} : Geom.v0) : Geom.v0
   );
-  let isOnGround = abs_float(Geom.vy(player.vel)) < 0.01 && collide(Geom.Rect.translate(player.box, {Geom.x: 0., y: 0.1}), Geom.v0, blocks) != Geom.v0;
+  let isOnGround = abs_float(Geom.vy(player.vel)) < 0.01 && hasCollision(Geom.Rect.translate(player.box, {Geom.x: 0., y: 2.}), blocks);
   let vel = player.vel;
   let vel = isOnGround
     ? (acc === Geom.v0 ? Geom.scaleVector(vel, friction) : vel)

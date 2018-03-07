@@ -11,7 +11,7 @@ let draw = (state, context, env) => {
     | Block.Rock => Reprocessing.Utils.color(~r=50, ~g=50, ~b=70, ~a=255)
     };
     Draw.fill(color, env);
-    Draw.rectf(~pos=(x, y), ~width=blockSize -. 1., ~height=blockSize -. 1., env);
+    Draw.rectf(~pos=(x, y), ~width=blockSize , ~height=blockSize , env);
   }, state.blocks);
 
   Draw.fill(Constants.green, env);

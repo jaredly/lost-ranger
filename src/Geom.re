@@ -157,7 +157,7 @@ let rec normalize = x => {
 };
 
 let thetaDiff = (a, b) => {
-  let d = mod_float(abs_float(b -. a), tau);
+  let d = abs_float(mod_float(abs_float(b -. a), tau));
   if (d > pi) {
     tau -. d
   } else {
@@ -343,16 +343,21 @@ module Rect = {
     let (magnitude, theta) = minFst(sides);
     {theta, magnitude}
   };
-  /* let collideToAabb = (vector, r1, b) => {
+  let collideToAabb = (vec, r1, b) => {
     open Aabb;
     let sides = [
       (r1.pos.x +. r1.hw -. b.x0, pi),
       (b.x1 -. (r1.pos.x -. r1.hw), 0.),
       (r1.pos.y +. r1.hh -. b.y0, -.halfPi),
       (b.y1 -. (r1.pos.y -. r1.hh), halfPi),
-    ];
-    minVectorDiff(vector, sides)
-  }; */
+    /* ]; */
+    ] |> List.filter(((magnitude, theta)) => addVectors({magnitude, theta}, vec).magnitude -. vec.magnitude < 0.001 );
+    /* ] |> List.filter(((m, t)) => !isThetaBetween(theta -. halfPi, theta +. halfPi, t)); */
+    /* ] |> List.filter(((m, t)) => !isThetaBetween(theta -. halfPi, theta +. halfPi, t)); */
+    /* ] |> List.filter(((m, t)) => thetaDiff(theta, t) > halfPi); */
+    let (magnitude, theta) = minFst(sides);
+    {theta, magnitude}
+  };
   let testCircle = (r, {Circle.center, rad} as c) => {
     testPoint(r, center)
     || {
