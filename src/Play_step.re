@@ -18,6 +18,14 @@ let start = (env) => {
     };
   };
 
+  for (y in 0 to ground - 1) {
+    Hashtbl.add(blocks, (0, y), Block.init(Block.Rock));
+    Hashtbl.add(blocks, (cols - 1, y), Block.init(Block.Rock))
+  };
+
+  for (y in 0 to 10) {
+    Hashtbl.add(blocks, (y + cols - 10, ground - y), Block.init(Block.Rock))
+  };
 
 
   {
@@ -52,23 +60,33 @@ let getUserInput = (prev, env) => Reprocessing.({
 
 let find_opt = (h, k) => Hashtbl.mem(h, k) ? Some(Hashtbl.find(h, k)) : None;
 
-/** LOL there's a *much* better way to do this */
+let ninesquare = [
+  (0, 0),
+  (0, 1),
+  (0, -1),
+  (1, 0),
+  (-1, 0),
+  (-1, 1),
+  (1, -1),
+  (-1, -1),
+  (1, 1),
+];
+
+let taller = ninesquare @ [
+  (0, 2),
+  (0, -2),
+  (1, 2),
+  (1, -2),
+  (-1, 2),
+  (-1, -2)
+];
+
 let collide = (rect, vel, blocks) => {
   let x = int_of_float(rect.Geom.Rect.pos.x /. blockSize);
   let y = int_of_float(rect.Geom.Rect.pos.y /. blockSize);
-  let potentials = [
-    (x, y),
-    (x, y + 1),
-    (x, y - 1),
-    (x + 1, y),
-    (x - 1, y),
-    (x - 1, y - 1),
-    (x + 1, y - 1),
-    (x + 1, y + 1),
-    (x - 1, y + 1),
-  ];
   List.fold_left(
-    ((moved, vel), (x, y)) => {
+    ((moved, vel), (dx, dy)) => {
+      let x = x + dx; let y = y + dy;
       if (Hashtbl.mem(blocks, (x,y))) {
         let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
         if (Geom.Rect.testAabb(moved, blockBox)) {
@@ -85,7 +103,7 @@ let collide = (rect, vel, blocks) => {
       }
     },
     (Geom.Rect.push(rect, vel), vel),
-    potentials
+    taller
   ) |> snd
 
   /* Hashtbl.fold(
@@ -119,7 +137,7 @@ let movePlayer = (userInput, player, blocks) => {
   let acc = userInput.left ? (vx > -. maxWalk ? Geom.{magnitude: walkSpeed, theta: pi} : Geom.v0) : (
     userInput.right ? (vx < maxWalk ? Geom.{magnitude: walkSpeed, theta: 0.} : Geom.v0) : Geom.v0
   );
-  let isOnGround = collide(Geom.Rect.translate(player.box, {Geom.x: 0., y: 0.1}), Geom.v0, blocks) != Geom.v0;
+  let isOnGround = abs_float(Geom.vy(player.vel)) < 0.01 && collide(Geom.Rect.translate(player.box, {Geom.x: 0., y: 0.1}), Geom.v0, blocks) != Geom.v0;
   let vel = player.vel;
   let vel = isOnGround
     ? (acc === Geom.v0 ? Geom.scaleVector(vel, friction) : vel)

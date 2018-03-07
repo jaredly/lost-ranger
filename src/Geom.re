@@ -27,6 +27,8 @@ module Ease = {
   easeInOutQuint: function (t) { return t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t } */
 };
 
+/* http://www.metanetsoftware.com/technique/tutorialA.html */
+
 type point = {x: float, y: float};
 type vector = {magnitude: float, theta: float};
 let v0 = {magnitude: 0., theta: 0.};
