@@ -50,6 +50,8 @@ let pdiff = (p1, p2) => {dx: p2.x -. p1.x, dy: p2.y -. p1.y};
 let addVectorToPoint = ({magnitude, theta}, {x, y}) => {
   {x: x +. cos(theta) *. magnitude, y: y +. sin(theta) *. magnitude}
 };
+let vx = ({magnitude, theta}) => cos(theta) *. magnitude;
+let vy = ({magnitude, theta}) => sin(theta) *. magnitude;
 let vectorToPector = ({magnitude, theta}) => {dx: cos(theta) *. magnitude, dy: sin(theta) *. magnitude};
 let angleTo = (p1, p2) => atan2(p2.y -. p1.y, p2.x -. p1.x);
 let pectorToVector = (p) => {
@@ -110,6 +112,7 @@ module Circle = {
     }
   };
 
+  /** NOTE this magnitude is too large, you need to subtract circle.rad */
   let vectorToLine = (c, p1, p2) => {
     let len = dist(p1, p2);
     let dot = (
@@ -142,13 +145,22 @@ module Circle = {
 };
 
 let pi = 3.14159;
-let halfPi = pi /. 2;
+let halfPi = pi /. 2.;
 let tau = pi *. 2.;
 
 let rec normalize = x => {
   if (x < -. pi) normalize(x +. tau)
   else if (x > pi) normalize(x -. tau)
   else x
+};
+
+let thetaDiff = (a, b) => {
+  let d = mod_float(abs_float(b -. a), tau);
+  if (d > pi) {
+    tau -. d
+  } else {
+    d
+  }
 };
 
 let isThetaBetween = (low, high, test) => {
@@ -206,6 +218,28 @@ let minFst = items => switch items {
 | [first, ...rest] => List.fold_left(((a1, a2), (b1, b2)) => (a1 < b1 ? (a1, a2) : (b1, b2)), first, rest)
 };
 
+/* let minVectorDiff = (vector, items) => {
+  let items = items |> List.map(((magnitude, theta)) => addVectors(vector, {magnitude, theta}));
+  let mag = abs_float(vector.magnitude);
+  switch items {
+| [] => assert(false)
+| [first, ...rest] =>
+List.fold_left((c1, c2) =>
+    if (abs_float(c1.magnitude) > mag) {
+      c2
+    } else if (abs_float(c2.magnitude) > mag) {
+      c1
+    } else {
+      if (thetaDiff(c1.theta, vector.theta) > thetaDiff(c2.theta , vector.theta)) {
+        c2
+      } else {
+        c1
+      }
+    } ,
+first, rest)
+};
+}; */
+
 module Aabb = {
   type t = {x0: float, y0: float, x1: float, y1: float};
   let testPoint = ({x0, y0, x1, y1}, {x, y}) => {
@@ -213,6 +247,7 @@ module Aabb = {
     y0 <= y && y <= y1
   };
 
+  let init = (x0, y0, w, h) => {x0, y0, x1: x0 +. w, y1: y0 +. h};
   let translate = ({x0, y0, x1, y1}, {x, y}) => {x0: x0 +. x, x1: x1 +. x, y0: y0 +. y, y1: y1 +. y};
   let fromPoint = ({x, y}) => {x0: x, y0: y, x1: x, y1: y};
 
@@ -241,11 +276,33 @@ module Aabb = {
     let (magnitude, theta) = minFst(sides);
     {theta, magnitude}
   };
+
+  let testCircle = (r, {Circle.center, rad} as c) => {
+    testPoint(r, center)
+    || {
+      let {x, y} = center;
+      if (r.x0 <= x && x <= r.x1) {
+        y < r.y0
+        ? (r.y0 -. y) < rad
+        : (y -. r.y1) < rad
+      } else if (r.y0 <= y && y <= r.y1) {
+        x < r.x0
+        ? (r.x0 -. x) < rad
+        : (x -. r.x1) < rad
+      } else {
+        let tx = x < r.x0 ? r.x0 : r.x1;
+        let ty = y < r.y0 ? r.y0 : r.y1;
+        Circle.testPoint(c, {x: tx, y: ty})
+      }
+    }
+  };
 };
 
 module Rect = {
   type t = {pos: point, width: float, height: float, hw: float, hh: float};
+  let create = (pos, width, height) => {pos, width, height, hw: width /. 2., hh: height /. 2.};
   let translate = (r, pos) => {...r, pos: addPoints(r.pos, pos)};
+  let push = (r, vector) => {...r, pos: addVectorToPoint(vector, r.pos)};
   let aabb = ({pos: {x, y}, hw, hh}) => Aabb.{x0: x -. hw, x1: x +. hw, y0: y -. hh, y1: y +. hh};
   let testPoint = ({pos: {x, y}, hw, hh}, p) => {
     x -. hw <= p.x && p.x <= x +. hw &&
@@ -283,6 +340,35 @@ module Rect = {
     ];
     let (magnitude, theta) = minFst(sides);
     {theta, magnitude}
+  };
+  /* let collideToAabb = (vector, r1, b) => {
+    open Aabb;
+    let sides = [
+      (r1.pos.x +. r1.hw -. b.x0, pi),
+      (b.x1 -. (r1.pos.x -. r1.hw), 0.),
+      (r1.pos.y +. r1.hh -. b.y0, -.halfPi),
+      (b.y1 -. (r1.pos.y -. r1.hh), halfPi),
+    ];
+    minVectorDiff(vector, sides)
+  }; */
+  let testCircle = (r, {Circle.center, rad} as c) => {
+    testPoint(r, center)
+    || {
+      let {x, y} = center;
+      if (r.pos.x -. r.hw <= x && x <= r.pos.x +. r.hw) {
+        y < r.pos.y -. r.hh
+        ? (r.pos.y -. r.hh -. y) < rad
+        : (y -. (r.pos.y +. r.hh)) < rad
+      } else if (r.pos.y -. r.hh <= y && y <= r.pos.y +. r.hh) {
+        x < r.pos.x -. r.hw
+        ? (r.pos.x -. r.hw -. x) < rad
+        : (x -. (r.pos.x +. r.hw)) < rad
+      } else {
+        let tx = x < r.pos.x -. r.hw ? r.pos.x -. r.hw : r.pos.x +. r.hw;
+        let ty = y < r.pos.y -. r.hh ? r.pos.y -. r.hh : r.pos.y +. r.hh;
+        Circle.testPoint(c, {x: tx, y: ty})
+      }
+    }
   };
 };
 
@@ -340,31 +426,3 @@ module Polygon = {
   };
 };
 
-
-/* boolean polyPoint(PVector[] vertices, float px, float py) {
-  boolean collision = false;
-
-  // go through each of the vertices, plus
-  // the next vertex in the list
-  int next = 0;
-  for (int current=0; current<vertices.length; current++) {
-
-    // get next vertex in list
-    // if we've hit the end, wrap around to 0
-    next = current+1;
-    if (next == vertices.length) next = 0;
-
-    // get the PVectors at our current position
-    // this makes our if statement a little cleaner
-    PVector vc = vertices[current];    // c for "current"
-    PVector vn = vertices[next];       // n for "next"
-
-    // compare position, flip 'collision' variable
-    // back and forth
-    if (((vc.y > py && vn.y < py) || (vc.y < py && vn.y > py)) &&
-         (px < (vn.x-vc.x)*(py-vc.y) / (vn.y-vc.y)+vc.x)) {
-            collision = !collision;
-    }
-  }
-  return collision;
-} */
