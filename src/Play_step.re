@@ -60,7 +60,8 @@ let getUserInput = (prev, env) => Reprocessing.({
 
 let find_opt = (h, k) => Hashtbl.mem(h, k) ? Some(Hashtbl.find(h, k)) : None;
 
-let ninesquare = [
+/** The ninesquare plus 3 on top & bottom */
+let fifteenbox = [
   (0, 0),
   (0, 1),
   (0, -1),
@@ -70,9 +71,6 @@ let ninesquare = [
   (1, -1),
   (-1, -1),
   (1, 1),
-];
-
-let taller = ninesquare @ [
   (0, 2),
   (0, -2),
   (1, 2),
@@ -81,7 +79,50 @@ let taller = ninesquare @ [
   (-1, -2)
 ];
 
-let hasCollision = (rect, blocks) => {
+let blockCollision = (center, check, blocks) => {
+  let x = int_of_float(center.Geom.x /. blockSize);
+  let y = int_of_float(center.Geom.y /. blockSize);
+  List.exists(
+    ((dx, dy)) => {
+      let x = x + dx; let y = y + dy;
+      if (Hashtbl.mem(blocks, (x,y))) {
+        let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
+        check(blockBox)
+      } else {
+        false
+      }
+    },
+    fifteenbox
+  )
+};
+
+let blockCollide = (center, vel, check, getCollisionVector, blocks) => {
+  let x = int_of_float(center.Geom.x /. blockSize);
+  let y = int_of_float(center.Geom.y /. blockSize);
+  List.fold_left(
+    ((moved, vel), (dx, dy)) => {
+      let x = x + dx; let y = y + dy;
+      if (Hashtbl.mem(blocks, (x,y))) {
+        let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
+        if (check(moved, blockBox)) {
+          let add = getCollisionVector(vel, moved, blockBox);
+          let vel = Geom.addVectors(add, vel);
+          (Geom.vectorToPector(vel), vel)
+        } else {
+          (moved, vel)
+        }
+      } else {
+        (moved, vel)
+      }
+    },
+    (Geom.vectorToPector(vel), vel),
+    fifteenbox
+  ) |> snd
+};
+
+let hasCollision = (rect, blocks) => blockCollision(rect.Geom.Rect.pos, Geom.Rect.testAabb(rect), blocks);
+
+/* let hasCollision = (rect, blocks) => {
   let x = int_of_float(rect.Geom.Rect.pos.x /. blockSize);
   let y = int_of_float(rect.Geom.Rect.pos.y /. blockSize);
   List.exists(
@@ -94,12 +135,19 @@ let hasCollision = (rect, blocks) => {
         false
       }
     },
-    taller
+    fifteenbox
   )
-};
+}; */
 
+let collide = (rect, vel, blocks) => blockCollide(
+  rect.Geom.Rect.pos,
+  vel,
+  (move, aabb) => Geom.Rect.testAabb(Geom.Rect.ptranslate(rect, move), aabb),
+  (vel, move, aabb) => Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb),
+  blocks
+);
 
-let collide = (rect, vel, blocks) => {
+/* let collide = (rect, vel, blocks) => {
   let x = int_of_float(rect.Geom.Rect.pos.x /. blockSize);
   let y = int_of_float(rect.Geom.Rect.pos.y /. blockSize);
   List.fold_left(
@@ -108,42 +156,20 @@ let collide = (rect, vel, blocks) => {
       if (Hashtbl.mem(blocks, (x,y))) {
         let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
         if (Geom.Rect.testAabb(moved, blockBox)) {
-          /* let vel = Geom.Rect.collideToAabb(vel, moved, blockBox); */
-          /* let add = Geom.Rect.vectorToAabb(moved, blockBox); */
           let add = Geom.Rect.collideToAabb(vel, moved, blockBox);
-          let prev = vel;
           let vel = Geom.addVectors(add, vel);
-          /** Fuzzing */
-          let vel = {Geom.magnitude: vel.Geom.magnitude +. 0.0001, theta: vel.Geom.theta};
           (Geom.Rect.push(rect, vel), vel)
         } else {
           (moved, vel)
         }
-
       } else {
         (moved, vel)
       }
     },
     (Geom.Rect.push(rect, vel), vel),
-    taller
+    fifteenbox
   ) |> snd
-
-  /* Hashtbl.fold(
-    ((x, y), block, (moved, vel)) => {
-      let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
-      if (Geom.Rect.testAabb(moved, blockBox)) {
-        /* let vel = Geom.Rect.collideToAabb(vel, moved, blockBox); */
-        let add = Geom.Rect.vectorToAabb(moved, blockBox);
-        let vel = Geom.addVectors(add, vel);
-        (Geom.Rect.push(rect, vel), vel)
-      } else {
-        (moved, vel)
-      }
-    },
-    blocks,
-    (Geom.Rect.push(rect, vel), vel)
-  ) |> snd */
-};
+}; */
 
 
 let walkSpeed = 0.5;

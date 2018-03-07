@@ -68,6 +68,7 @@ let invertVector = ({magnitude, theta}) => {magnitude, theta: theta +. 3.14159};
 let invertPector = ({dx, dy}) => {dx: -.dx, dy: -.dy};
 let scaleVector = ({magnitude, theta}, scale) => {theta, magnitude: magnitude *. scale};
 let addPoints = (p1, p2) => {x: p1.x +. p2.x, y: p1.y +. p2.y};
+let addPectorToPoint = ({dx, dy}, {x, y}) => {x: x +. dx, y: y +. dy};
 
 let lerpPos = (p1, p2, amount) => {
   let dx = p2.x -. p1.x;
@@ -304,6 +305,7 @@ module Rect = {
   type t = {pos: point, width: float, height: float, hw: float, hh: float};
   let create = (pos, width, height) => {pos, width, height, hw: width /. 2., hh: height /. 2.};
   let translate = (r, pos) => {...r, pos: addPoints(r.pos, pos)};
+  let ptranslate = (r, pector) => {...r, pos: addPectorToPoint(pector, r.pos)};
   let push = (r, vector) => {...r, pos: addVectorToPoint(vector, r.pos)};
   let aabb = ({pos: {x, y}, hw, hh}) => Aabb.{x0: x -. hw, x1: x +. hw, y0: y -. hh, y1: y +. hh};
   let testPoint = ({pos: {x, y}, hw, hh}, p) => {
@@ -311,16 +313,16 @@ module Rect = {
     y -. hh <= p.y && p.y <= y +. hh
   };
   let testRect = (r1, r2) => {
-    r1.pos.x +. r1.hw >= r2.pos.x -. r2.hw &&
-    r1.pos.x -. r1.hw <= r2.pos.x +. r2.hw &&
-    r1.pos.y +. r1.hh >= r2.pos.y -. r2.hh &&
-    r1.pos.y -. r1.hh <= r2.pos.y +. r2.hh
+    r1.pos.x +. r1.hw > r2.pos.x -. r2.hw &&
+    r1.pos.x -. r1.hw < r2.pos.x +. r2.hw &&
+    r1.pos.y +. r1.hh > r2.pos.y -. r2.hh &&
+    r1.pos.y -. r1.hh < r2.pos.y +. r2.hh
   };
   let testAabb = (r1, b) => Aabb.({
-    r1.pos.x +. r1.hw >= b.x0 &&
-    r1.pos.x -. r1.hw <= b.x1 &&
-    r1.pos.y +. r1.hh >= b.y0 &&
-    r1.pos.y -. r1.hh <= b.y1
+    r1.pos.x +. r1.hw > b.x0 &&
+    r1.pos.x -. r1.hw < b.x1 &&
+    r1.pos.y +. r1.hh > b.y0 &&
+    r1.pos.y -. r1.hh < b.y1
   });
   let vectorToRect = (r1, r2) => {
     let sides = [
