@@ -313,9 +313,13 @@ module Aabb = {
     }
   };
 
+  let pythag = (hypotenous, side) => sqrt(hypotenous *. hypotenous -. side *. side);
+
   /* TODO get this working right */
   let collideToCircle = (vec, r, {Circle.center: {x, y}, rad} as c) => {
     /* let {magnitude, theta} = pectorToVector(pdiff(center, {x: tx, y: ty})); */
+    let hoff = y < r.y0 ? rad -. pythag(rad, r.y0 -. y) : (y > r.y1 ? rad -. pythag(rad, y -. r.y1) : 0.);
+    let voff = x < r.x0 ? rad -. pythag(rad, r.x0 -. x) : (x > r.x1 ? rad -. pythag(rad, x -. r.x1) : 0.);
     let sides =
     /* [
       (r.x0, r.y0),
@@ -326,10 +330,10 @@ module Aabb = {
     |> List.map(((a, b)) => addMagnitude(pectorToVector(pdiff({x: a, y: b}, {x, y})), rad))
     |> items => items @ */
     ([
-      (x, r.y0 -. rad),
-      (x, r.y1 +. rad),
-      (r.x0 -. rad, y),
-      (r.x1 +. rad, y),
+      (x, r.y0 -. rad +. voff),
+      (x, r.y1 +. rad -. voff),
+      (r.x0 -. rad +. hoff, y),
+      (r.x1 +. rad -. hoff, y),
     ]
     |> List.map(((a, b)) => pectorToVector(pdiff({x, y},{x: a, y: b})))
     )
