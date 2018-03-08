@@ -177,3 +177,7 @@ let step = (state, context, env) => {
     player
   }
 };
+
+let step = (state, context, env) => {
+  {...state, player: {...state.player, box: {...state.player.box, pos: Geom.fromIntTuple(Reprocessing.Env.mouse(env))}}}
+};

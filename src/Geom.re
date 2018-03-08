@@ -316,6 +316,31 @@ module Aabb = {
   /* TODO get this working right */
   let collideToCircle = (vec, r, {Circle.center: {x, y}, rad} as c) => {
     /* let {magnitude, theta} = pectorToVector(pdiff(center, {x: tx, y: ty})); */
+    let sides =
+    /* [
+      (r.x0, r.y0),
+      (r.x0, r.y1),
+      (r.x1, r.y0),
+      (r.x1, r.y1),
+    ]
+    |> List.map(((a, b)) => addMagnitude(pectorToVector(pdiff({x: a, y: b}, {x, y})), rad))
+    |> items => items @ */
+    ([
+      (x, r.y0 -. rad),
+      (x, r.y1 +. rad),
+      (r.x0 -. rad, y),
+      (r.x1 +. rad, y),
+    ]
+    |> List.map(((a, b)) => pectorToVector(pdiff({x, y},{x: a, y: b})))
+    )
+    |> List.filter((vec2) => addVectors(vec2, vec).magnitude -. vec.magnitude < 0.001 );
+
+    minMag(sides);
+  };
+
+  /* TODO get this working right */
+  /* let circleVectors = (vec, r, {Circle.center: {x, y}, rad} as c) => {
+    /* let {magnitude, theta} = pectorToVector(pdiff(center, {x: tx, y: ty})); */
     let sides = [
       (r.x0, r.y0),
       (r.x0, r.y1),
@@ -327,10 +352,10 @@ module Aabb = {
       (r.x1, y)
     ]
     |> List.map(((a, b)) => addMagnitude(pectorToVector(pdiff({x, y},{x: a, y: b})), rad))
-    |> List.filter((vec2) => addVectors(vec2, vec).magnitude -. vec.magnitude < 0.001 );
+    /* |> List.filter((vec2) => addVectors(vec2, vec).magnitude -. vec.magnitude < 0.001 ); */
 
-    minMag(sides);
-  };
+    /* minMag(sides); */
+  }; */
 
   let testCircle = (r, {Circle.center, rad} as c) => {
     testPoint(r, center)

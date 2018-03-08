@@ -6,6 +6,10 @@ let line = (p1, p2, env) => {
   Draw.linef(~p1=tuple(p1), ~p2=tuple(p2), env)
 };
 
+let vec = (start, vec, env) => {
+  Draw.linef(~p1=tuple(start), ~p2=tuple(addVectorToPoint(vec, start)), env);
+};
+
 let circle = ({Circle.rad, center}, env) => {
   Draw.ellipsef(~center=tuple(center), ~radx=rad, ~rady=rad, env);
 };
