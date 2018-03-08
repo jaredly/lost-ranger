@@ -1,6 +1,9 @@
 open Play_types;
 open Reprocessing;
 
+
+let gameWidth = blockSize *. 100.;
+
 let draw = (state, context, env) => {
   Draw.background(Constants.white, env);
 
@@ -51,9 +54,29 @@ let draw = (state, context, env) => {
   GeomDraw.rect(state.player.box, env);
   /* GeomDraw.circle({Geom.Circle.center: state.player.box.pos, rad: blockSize /. 2.}, env); */
 
+  Draw.fill(Reprocessing.Utils.color(~r=150, ~g=150, ~b=170, ~a=255), env);
+  let drawPadding = 200.;
+  let x0 = dx -. drawPadding;
+  let y0 = dy -. drawPadding;
+  let x1 = dx +. w +. drawPadding;
+  let y1 = dy +. h +. drawPadding;
   state.stones |> List.iter(stone => {
-    Draw.fill(Reprocessing.Utils.color(~r=150, ~g=150, ~b=170, ~a=255), env);
-    GeomDraw.circle(stone.Stone.circle, env);
+    let {Geom.x,y} = stone.Stone.circle.center;
+    if (y > y0 && y < y1) {
+      if (x > x0 && x < x1) {
+        GeomDraw.circle(stone.Stone.circle, env);
+      } else {
+        let left = x -. gameWidth;
+        if (left > x0 && left < x1) {
+          GeomDraw.circle(Geom.Circle.translate(stone.Stone.circle, {x: -.gameWidth, y: 0.}), env)
+        } else {
+          let right = x +. gameWidth;
+          if (right > x0 && right < x1) {
+            GeomDraw.circle(Geom.Circle.translate(stone.Stone.circle, {x: +.gameWidth, y: 0.}), env)
+          }
+        }
+      }
+    };
     /* Draw.ellipsef(~center=Geom.tuple(stone.Stone.circle.center), ~radx=10., ~rady=10., env); */
   });
 
