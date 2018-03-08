@@ -42,11 +42,11 @@ module Block = {
 
 module Fruit = {
   type kind = Apple | Peach;
-  type t = {pos: Geom.point, size: float, kind}
+  type t = {kind, vel: Geom.vector, circle: Geom.Circle.t}
 };
 
 module Stone = {
-  type t = {pos: Geom.point}
+  type t = {circle: Geom.Circle.t, vel: Geom.vector};
 };
 
 module FruitTree = {
@@ -91,7 +91,7 @@ type userInput = {
   right: bool,
   jump: bool,
   action: bool,
-  throw: option((Geom.point, Geom.point)),
+  throw: option((Geom.point, Geom.vector)),
 };
 
 type state = {

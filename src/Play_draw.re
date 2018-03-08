@@ -20,4 +20,17 @@ let draw = (state, context, env) => {
   /* Draw.stroke(Constants.green, env); */
   GeomDraw.rect(state.player.box, env);
   /* GeomDraw.circle({Geom.Circle.center: state.player.box.pos, rad: blockSize /. 2.}, env); */
+
+  state.stones |> List.iter(stone => {
+    Draw.fill(Reprocessing.Utils.color(~r=150, ~g=150, ~b=170, ~a=255), env);
+    GeomDraw.circle(stone.Stone.circle, env);
+    /* Draw.ellipsef(~center=Geom.tuple(stone.Stone.circle.center), ~radx=10., ~rady=10., env); */
+  });
+
+  Draw.stroke(Constants.red, env);
+  switch (state.userInput.throw) {
+  | None => ()
+  | Some((p1, vec)) => GeomDraw.line(state.player.box.pos, Geom.addVectorToPoint(vec, state.player.box.pos), env)
+  };
+  Draw.noStroke(env);
 };
