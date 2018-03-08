@@ -58,141 +58,26 @@ let getUserInput = (prev, env) => Reprocessing.({
   throw: None
 });
 
-let find_opt = (h, k) => Hashtbl.mem(h, k) ? Some(Hashtbl.find(h, k)) : None;
+/* let find_opt = (h, k) => Hashtbl.mem(h, k) ? Some(Hashtbl.find(h, k)) : None; */
 
-/** The ninesquare plus 3 on top & bottom */
-let fifteenbox = [
-  (0, 0),
-  (0, 1),
-  (0, -1),
-  (1, 0),
-  (-1, 0),
-  (-1, 1),
-  (1, -1),
-  (-1, -1),
-  (1, 1),
-  (0, 2),
-  (0, -2),
-  (1, 2),
-  (1, -2),
-  (-1, 2),
-  (-1, -2)
-];
 
-let blockCollision = (center, check, blocks) => {
-  let x = int_of_float(center.Geom.x /. blockSize);
-  let y = int_of_float(center.Geom.y /. blockSize);
-  List.exists(
-    ((dx, dy)) => {
-      let x = x + dx; let y = y + dy;
-      if (Hashtbl.mem(blocks, (x,y))) {
-        let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
-        check(blockBox)
-      } else {
-        false
-      }
-    },
-    fifteenbox
-  )
-};
-
-let blockCollide = (center, vel, check, getCollisionVector, blocks) => {
-  let x = int_of_float(center.Geom.x /. blockSize);
-  let y = int_of_float(center.Geom.y /. blockSize);
-  List.fold_left(
-    ((moved, vel), (dx, dy)) => {
-      let x = x + dx; let y = y + dy;
-      if (Hashtbl.mem(blocks, (x,y))) {
-        let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
-        if (check(moved, blockBox)) {
-          let add = getCollisionVector(vel, moved, blockBox);
-          let vel = Geom.addVectors(add, vel);
-          (Geom.vectorToPector(vel), vel)
-        } else {
-          (moved, vel)
-        }
-      } else {
-        (moved, vel)
-      }
-    },
-    (Geom.vectorToPector(vel), vel),
-    fifteenbox
-  ) |> snd
-};
-
-let hasCollision = (rect, blocks) => blockCollision(rect.Geom.Rect.pos, Geom.Rect.testAabb(rect), blocks);
-
-let collide = (rect, vel, blocks) => blockCollide(
-  rect.Geom.Rect.pos,
-  vel,
-  (move, aabb) => Geom.Rect.testAabb(Geom.Rect.ptranslate(rect, move), aabb),
-  (vel, move, aabb) => Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb),
-  blocks
-);
-
-let walkSpeed = 0.5;
 let maxWalk = 5.;
-let gravity = 0.5;
-/* let friction = 0.7; */
-let friction = 1.;
-let jump = 15.;
+let walkSpeed = 0.5;
 
-let moveObject = (pos, vel, acc, jumping, checkCollision, vecToCollision, blocks) => {
-  let groundShift = {Geom.dx: 0., dy: 0.1};
-  let isOnGround = abs_float(Geom.vy(vel)) < 0.01 && blockCollision(Geom.addPectorToPoint(groundShift, pos), checkCollision(groundShift), blocks);
-  let vel = isOnGround
-    ? (acc === Geom.v0 ? Geom.scaleVector(vel, friction) : vel)
-    : Geom.addVectors(Geom.{magnitude: gravity, theta: pi /. 2.}, vel);
-  let vel = Geom.addVectors(vel, acc);
-  let vel = (isOnGround && jumping)
-    ? Geom.addVectors(vel, Geom.{magnitude: jump, theta: -.pi /. 2.})
-    : vel;
-  let vel = blockCollide(pos, vel, checkCollision, vecToCollision, blocks);
-  vel
-};
-
-let testRect = (rect, move, aabb) => Geom.Rect.testAabb(Geom.Rect.ptranslate(rect, move), aabb);
-let collideRect = (rect, vel, move, aabb) => Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb);
-
-let testCircle = (circle, move, aabb) => Geom.Aabb.testCircle(aabb, Geom.Circle.ptranslate(circle, move));
-let collideCircle = (circle, vel, move, aabb) => Geom.Aabb.vectorToCircle(aabb, Geom.Circle.ptranslate(circle, move));
+let module MovePlayer = Play_collide.Mover({
+  let gravity = 0.5;
+  let friction = 0.7;
+  let jump = 15.;
+});
 
 let movePlayer = (userInput, player, blocks) => {
   let vx = Geom.vx(player.vel);
   let acc = userInput.left ? (vx > -. maxWalk ? Geom.{magnitude: walkSpeed, theta: pi} : Geom.v0) : (
     userInput.right ? (vx < maxWalk ? Geom.{magnitude: walkSpeed, theta: 0.} : Geom.v0) : Geom.v0
   );
-  let vel = moveObject(
-    player.box.pos,
-    player.vel,
-    acc,
-    userInput.jump,
-    testCircle({Geom.Circle.center: player.box.pos, rad: blockSize /. 2.}),
-    collideCircle({Geom.Circle.center: player.box.pos, rad: blockSize /. 2.}),
-    /* testRect(player.box), */
-    /* collideRect(player.box), */
-    blocks
-  );
+  let vel = MovePlayer.moveObject(player.box.pos, player.vel, acc, userInput.jump, Play_collide.testRect(player.box), Play_collide.collideRect(player.box), blocks);
   {...player, vel, box: Geom.Rect.push(player.box, vel)}
 };
-
-/* let movePlayer = (userInput, player, blocks) => {
-  let vx = Geom.vx(player.vel);
-  let acc = userInput.left ? (vx > -. maxWalk ? Geom.{magnitude: walkSpeed, theta: pi} : Geom.v0) : (
-    userInput.right ? (vx < maxWalk ? Geom.{magnitude: walkSpeed, theta: 0.} : Geom.v0) : Geom.v0
-  );
-  let isOnGround = abs_float(Geom.vy(player.vel)) < 0.01 && hasCollision(Geom.Rect.translate(player.box, {Geom.x: 0., y: 2.}), blocks);
-  let vel = player.vel;
-  let vel = isOnGround
-    ? (acc === Geom.v0 ? Geom.scaleVector(vel, friction) : vel)
-    : Geom.addVectors(Geom.{magnitude: gravity, theta: pi /. 2.}, vel);
-  let vel = Geom.addVectors(vel, acc);
-  let vel = (isOnGround && userInput.jump)
-    ? Geom.addVectors(vel, Geom.{magnitude: jump, theta: -.pi /. 2.})
-    : vel;
-  let vel = collide(player.box, vel, blocks);
-  {...player, vel, box: Geom.Rect.push(player.box, vel)}
-}; */
 
 let step = (state, context, env) => {
   let userInput = getUserInput(state.userInput, env);
