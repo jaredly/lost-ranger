@@ -1,6 +1,7 @@
 open Play_types;
 open Reprocessing;
 
+let textColor = Constants.black;
 
 let gameWidth = blockSize *. 100.;
 
@@ -49,19 +50,31 @@ let drawPlayer = (state, context, env) => {
 
   /* Head! */
   Draw.pushMatrix(env);
-  Draw.translate(~x=x, ~y=y -. Players.male_head_height *. 0.2 -. 5., env);
+  Draw.translate(~x=x, ~y=y -. Players.male_head_height *. 0.1 -. 5., env);
   let bob = sin(state.player.walkTimer *. 20.) *. amp;
   let bob = state.player.isOnGround ? bob : 0.;
   Draw.translate(~x=0., ~y=bob *. 2., env);
+  let rot = switch state.userInput.throw {
+  | Some((_, v)) when v.Geom.magnitude > 5. => Draw.rotate(((
+    state.player.facingLeft ? v.Geom.theta /. 2. +. (v.Geom.theta < 0. ? Geom.halfPi : -. Geom.halfPi)
+    : v.Geom.theta /. 2.
+  )), env)
+  | _ => ()
+  };
   /* Draw.rotate(state.player.facingLeft ? walk : -. walk, env); */
   Players.male_head(context.Shared.charSheet, ~scale=0.4, ~flip=!state.player.facingLeft,
-  ~pos=( -. Players.male_head_width *. 0.2, -. Players.male_head_width *. 0.2 ), env);
+  ~pos=( -. Players.male_head_width *. 0.2, -. Players.male_head_width *. 0.3 ), env);
   Draw.popMatrix(env);
 
   /* arm in front */
+  let faceRot = state.player.facingLeft ? walk2/.2. : walk/.2.;
+  let rot = switch state.userInput.throw {
+  | None => faceRot
+  | Some((_, v)) => v.Geom.magnitude > 5. ? (state.player.facingLeft ? v.Geom.theta +. Geom.halfPi /. 2. : v.Geom.theta +. Geom.pi -. Geom.halfPi /. 2.) : faceRot
+  };
   Draw.pushMatrix(env);
   Draw.translate(~x=x +. shoulder *. loff *. -1., ~y=armTop, env);
-  Draw.rotate(state.player.facingLeft ? walk2/.2. : walk/.2., env);
+  Draw.rotate(rot, env);
   Players.male_arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_arm_width *. 0.2, 0.), ~flip=false, env);
   Draw.popMatrix(env);
 
@@ -132,7 +145,7 @@ let draw = (state, context, env) => {
   Draw.stroke(Utils.color(~r=150, ~g=150, ~b=150, ~a=100), env);
   switch (state.userInput.throw) {
   | None => ()
-  | Some((p1, vec)) => GeomDraw.line(Geom.addPoints({Geom.x: 0., y: -10.}, state.player.box.pos), Geom.addVectorToPoint(vec, state.player.box.pos), env)
+  | Some((p1, vec)) => GeomDraw.vec(Geom.addPoints({Geom.x: 0., y: -40.}, state.player.box.pos), vec, env)
   };
   Draw.noStroke(env);
 
@@ -170,7 +183,7 @@ let draw = (state, context, env) => {
       | None => ()
       | Some(circle) => {
         let (x, y) = Geom.tuple(circle.Geom.Circle.center);
-        let scale = 0.3;
+        let scale = stone.Stone.circle.rad /. Play_assets.Items.ore_coal_width *. 5.;
         Draw.pushMatrix(env);
         Draw.translate(~x, ~y, env);
         Draw.rotate(stone.Stone.rotation, env);
@@ -185,4 +198,6 @@ let draw = (state, context, env) => {
     };
     /* Draw.ellipsef(~center=Geom.tuple(stone.Stone.circle.center), ~radx=10., ~rady=10., env); */
   });
+
+
 };
