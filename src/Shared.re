@@ -12,6 +12,7 @@ type context = {
   smallTitleFont: Reprocessing.fontT,
   charSheet: Reprocessing.imageT,
   itemSheet: Reprocessing.imageT,
+  tileSheet: Reprocessing.imageT,
 };
 
 type globalState('status) = {

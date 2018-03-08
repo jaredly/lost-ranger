@@ -86,15 +86,31 @@ let draw = (state, context, env) => {
       | None => ()
       | Some(block) => {
 
-        let x = float_of_int(x) *. blockSize;
-        let y = float_of_int(y) *. blockSize;
-        let color = switch block.Block.kind {
+        let x = float_of_int(x) *. blockSize +. blockSize /. 2.;
+        let y = float_of_int(y) *. blockSize +. blockSize /. 2.;
+        let sprite = switch block.Block.kind {
+        | Block.Dirt => Play_assets.Tiles.dirt
+        | Block.Rock => Play_assets.Tiles.rock
+        };
+
+        let xx = mod_float(x, gameWidth);
+        let xx = xx < 0. ? xx +. gameWidth : xx;
+        let rot = floor((sin(xx *. xx +. y *. y) +. 1.) /. 2. *. 4.);
+        let rot = rot *. Geom.halfPi;
+
+        Draw.pushMatrix(env);
+        Draw.translate(~x, ~y, env);
+        Draw.rotate(rot, env);
+        sprite(context.Shared.tileSheet, ~pos=(-.blockSize /. 2., -.blockSize/.2.), ~scale=blockSize /. 128., ~flip=false, env);
+        Draw.popMatrix(env);
+
+        /* let color = switch block.Block.kind {
         | Block.Dirt => Reprocessing.Utils.color(~r=120, ~g=100, ~b=50, ~a=255)
         | Block.Rock => Reprocessing.Utils.color(~r=50, ~g=50, ~b=70, ~a=255)
         };
         Draw.fill(color, env);
         Draw.stroke(Constants.white, env);
-        Draw.rectf(~pos=(x, y), ~width=blockSize , ~height=blockSize , env);
+        Draw.rectf(~pos=(x, y), ~width=blockSize , ~height=blockSize , env); */
 
       }
       }
