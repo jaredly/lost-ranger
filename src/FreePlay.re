@@ -22,6 +22,7 @@ let step = (status, context, env) => {
 let draw = (status, context, env) => {
   Play_draw.draw(status, context, env);
 
+  /* GeomDebug.draw(status, context, env); */
 
   /* Reprocessing.Draw.tint(Play_draw.textColor, env);
   Reprocessing.Draw.text(~font=context.textFont, ~body=Printf.sprintf("%d.%d", size, num + 1), ~pos=(Reprocessing.Env.width(env) - 50, 10), env);

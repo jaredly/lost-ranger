@@ -220,8 +220,8 @@ module Arc = {
   /* TODO test line */
 };
 
-let minFst = items => switch items {
-| [] => (0., 0.)
+let minFst = (default, items) => switch items {
+| [] => default
 | [first, ...rest] => List.fold_left(((a1, a2), (b1, b2)) => (a1 < b1 ? (a1, a2) : (b1, b2)), first, rest)
 };
 
@@ -263,7 +263,7 @@ module Aabb = {
       (b1.y1 -. b2.y0, -.halfPi),
       (b2.y1 -. b1.y0, halfPi),
     ];
-    let (magnitude, theta) = minFst(sides);
+    let (magnitude, theta) = minFst((0., 0.), sides);
     {theta, magnitude}
   };
   /* let vectorToPoint = (b1, {x, y}) => {
@@ -287,7 +287,7 @@ module Aabb = {
         ((center.y +. rad) -. r.y0, halfPi),
       ];
     /* ] |> List.filter(((magnitude, theta)) => addVectors({magnitude, theta}, vec).magnitude -. vec.magnitude < 0.001 ); */
-      let (magnitude, theta) = minFst(sides);
+      let (magnitude, theta) = minFst((0., 0.), sides);
       {theta, magnitude: -.magnitude}
     } else {
       let {x, y} = center;
@@ -412,7 +412,7 @@ module Rect = {
       (r1.pos.y +. r1.hh -. (r2.pos.y -. r2.hh), -.halfPi),
       (r2.pos.y +. r2.hh -. (r1.pos.y -. r1.hh), halfPi),
     ];
-    let (magnitude, theta) = minFst(sides);
+    let (magnitude, theta) = minFst((0., 0.), sides);
     {theta, magnitude}
   };
   let vectorToAabb = (r1, b) => {
@@ -423,9 +423,10 @@ module Rect = {
       (r1.pos.y +. r1.hh -. b.y0, -.halfPi),
       (b.y1 -. (r1.pos.y -. r1.hh), halfPi),
     ];
-    let (magnitude, theta) = minFst(sides);
+    let (magnitude, theta) = minFst((0., 0.), sides);
     {theta, magnitude}
   };
+  /** TODO this needs to do a line collision test with each side, and then return the one that gets it back to the collided side... I think */
   let collideToAabb = (vec, r1, b) => {
     open Aabb;
     let sides = [
@@ -438,7 +439,8 @@ module Rect = {
     /* ] |> List.filter(((m, t)) => !isThetaBetween(theta -. halfPi, theta +. halfPi, t)); */
     /* ] |> List.filter(((m, t)) => !isThetaBetween(theta -. halfPi, theta +. halfPi, t)); */
     /* ] |> List.filter(((m, t)) => thetaDiff(theta, t) > halfPi); */
-    let (magnitude, theta) = minFst(sides);
+    /* let (magnitude, theta) = minFst((0., (0., 0.)), sides |> List.map(((magnitude, theta)) => (addVectors({magnitude, theta}, vec).magnitude, (magnitude, theta)))) |> snd; */
+    let (magnitude, theta) = minFst((0., 0.), sides);
     {theta, magnitude}
   };
   let testCircle = (r, {Circle.center, rad} as c) => {

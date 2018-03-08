@@ -33,6 +33,7 @@ let setup = (assetDir, env) => {
   let context = {
     height,
     width,
+    charSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"SpriteSheets"/+"spritesheet_characters.png", env),
     Shared.titleFont: Reprocessing.Draw.loadFont( ~filename=assetDir /+ "Orbitron-Black-48.fnt", ~isPixel=false, env),
     smallTitleFont: Reprocessing.Draw.loadFont( ~filename=assetDir /+ "Orbitron-Regular-24.fnt", ~isPixel=false, env),
     boldTextFont: Reprocessing.Draw.loadFont( ~filename=assetDir /+ "Orbitron-Black-24.fnt", ~isPixel=false, env),

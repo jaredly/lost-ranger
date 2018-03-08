@@ -123,7 +123,7 @@ let module Mover = (Config: MoveConfig) => {
       ? Geom.addVectors(vel, Geom.{magnitude: Config.jump, theta: -.pi /. 2.})
       : vel;
     let vel = incrementalCollide(pos, vel, Config.bounce, checkCollision, vecToCollision, blocks);
-    vel
+    (isOnGround, vel)
   };
 };
 

@@ -58,6 +58,9 @@ let start = (env) => {
     vel: Geom.v0,
     box: Geom.Rect.create({Geom.y: float_of_int(ground - 5) *. blockSize -. blockSize *. 1.9, x: blockSize}, blockSize *. 0.7, blockSize *. 1.4),
     throwSkill: 0.,
+    isOnGround: false,
+    facingLeft: true,
+    walkTimer: 0.,
     inventory: {
       Inventory.size: 20,
       slots: Array.make(20, Inventory.Nothing),
@@ -102,8 +105,8 @@ let movePlayer = (userInput, player, blocks) => {
   let acc = userInput.left ? (vx > -. maxWalk ? Geom.{magnitude: walkSpeed, theta: pi} : Geom.v0) : (
     userInput.right ? (vx < maxWalk ? Geom.{magnitude: walkSpeed, theta: 0.} : Geom.v0) : Geom.v0
   );
-  let vel = MovePlayer.moveObject(player.box.pos, player.vel, acc, userInput.jump, Play_collide.testRect(player.box), Play_collide.collideRect(player.box), blocks);
-  {...player, vel, box: Geom.Rect.push(player.box, vel)}
+  let (isOnGround, vel) = MovePlayer.moveObject(player.box.pos, player.vel, acc, userInput.jump, Play_collide.testRect(player.box), Play_collide.collideRect(player.box), blocks);
+  {...player, vel, box: Geom.Rect.push(player.box, vel), isOnGround}
 };
 
 let wrapX = (x, gameWidth) => x < 0. ? gameWidth +. x : (x > gameWidth ? x -. gameWidth : x);
@@ -112,7 +115,7 @@ let wrap = ({Geom.x, y}, gameWidth) => {Geom.x: wrapX(x, gameWidth), y};
 
 let moveStone = (stone, otherStones, blocks) => {
   open! Stone;
-  let vel = MoveStone.moveObject(
+  let (_, vel) = MoveStone.moveObject(
     stone.circle.center,
     stone.vel,
     Geom.v0,
@@ -168,12 +171,18 @@ let step = (state, context, env) => {
   } : stones;
 
   let player = movePlayer(userInput, state.player, state.blocks);
+  let inputLeft = userInput.left ? true : (userInput.right ? false : player.facingLeft);
+  let facingLeft = switch userInput.throw {
+  | None => inputLeft
+  | Some((_, v)) => v.Geom.magnitude > 5. ? Geom.vx(v) < 0. : inputLeft
+  };
+  let walkTimer = (userInput.left || userInput.right ? player.walkTimer +. Reprocessing.Env.deltaTime(env) : 0.);
   let (camera, player) = followPlayer(player, state.camera, gameWidth);
   {
     ...state,
     userInput,
     stones,
     camera,
-    player
+    player: {...player, facingLeft, walkTimer}
   }
 };

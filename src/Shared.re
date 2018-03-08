@@ -10,6 +10,7 @@ type context = {
   titleFont: Reprocessing.fontT,
   boldTextFont: Reprocessing.fontT,
   smallTitleFont: Reprocessing.fontT,
+  charSheet: Reprocessing.imageT,
 };
 
 type globalState('status) = {

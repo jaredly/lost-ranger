@@ -81,6 +81,9 @@ type player = {
   vel: Geom.vector,
   box: Geom.Rect.t,
   throwSkill: float,
+  facingLeft: bool,
+  isOnGround: bool,
+  walkTimer: float,
   /* throwing: option((Geom.vector, Projectile.kind)), */
   inventory: Inventory.t,
   /* crouching, crouchingBox */
