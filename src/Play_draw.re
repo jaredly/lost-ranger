@@ -5,6 +5,41 @@ let textColor = Constants.black;
 
 let gameWidth = blockSize *. 100.;
 
+let drawStone = (context, pos, stone, env) => {
+        let (x, y) = Geom.tuple(pos);
+        let scale = stone.Stone.circle.rad /. Play_assets.Items.ore_coal_width *. 5.;
+        Draw.pushMatrix(env);
+        Draw.translate(~x, ~y, env);
+        Draw.rotate(stone.Stone.rotation, env);
+        Play_assets.Items.ore_coal(context.Shared.itemSheet, ~scale=scale, ~pos=(
+          -. Play_assets.Items.ore_coal_width *. scale /. 2.,
+          -. Play_assets.Items.ore_coal_height *. scale /. 2.,
+        ), ~flip=false, env);
+        Draw.popMatrix(env);
+
+};
+
+let shoulder = -4.;
+
+let rockPos = (state, v, env) => {
+  let angle = if (v.Geom.magnitude > 5.) {
+    let percent = v.Geom.magnitude /. 200.;
+    let extra = Geom.halfPi /. 2. *. percent;
+    (state.player.facingLeft ? v.Geom.theta +. extra : v.Geom.theta +. Geom.pi -. extra)
+  } else {
+    0.
+  };
+  let (x, y) = Geom.tuple(state.player.box.pos);
+  let y = y -. 10.;
+
+  let loff = state.player.facingLeft ? 1. : -1.;
+  let armTop = y -. Play_assets.Players.male_body_height *. 0.2 +. 10.;
+  let arm = {Geom.x: x +. shoulder *. loff *. -1., y: armTop};
+  let relativeToArm = {Geom.theta: angle +. Geom.halfPi, magnitude: Play_assets.Players.male_arm_height *. 0.4};
+
+  Geom.addVectorToPoint(relativeToArm, arm);
+};
+
 let drawPlayer = (state, context, env) => {
   /* Draw.fill(Constants.green, env); */
   /* GeomDraw.rect(state.player.box, env); */
@@ -34,7 +69,6 @@ let drawPlayer = (state, context, env) => {
 
   /* arm behind */
   let loff = state.player.facingLeft ? 1. : -1.;
-  let shoulder = -4.;
   let armTop = y -. Players.male_body_height *. 0.2 +. 10.;
   Draw.pushMatrix(env);
   Draw.translate(~x=x +. shoulder *. loff, ~y=armTop, env);
@@ -54,8 +88,8 @@ let drawPlayer = (state, context, env) => {
   let bob = sin(state.player.walkTimer *. 20.) *. amp;
   let bob = state.player.isOnGround ? bob : 0.;
   Draw.translate(~x=0., ~y=bob *. 2., env);
-  let rot = switch state.userInput.throw {
-  | Some((_, v)) when v.Geom.magnitude > 5. => Draw.rotate(((
+  let rot = switch state.player.throw {
+  | Some((_, v, stone)) when v.Geom.magnitude > 5. => Draw.rotate(((
     state.player.facingLeft ? v.Geom.theta /. 2. +. (v.Geom.theta < 0. ? Geom.halfPi : -. Geom.halfPi)
     : v.Geom.theta /. 2.
   )), env)
@@ -68,16 +102,38 @@ let drawPlayer = (state, context, env) => {
 
   /* arm in front */
   let faceRot = state.player.facingLeft ? walk2/.2. : walk/.2.;
-  let rot = switch state.userInput.throw {
+  let rot = switch state.player.throw {
   | None => faceRot
-  | Some((_, v)) => v.Geom.magnitude > 5. ? (state.player.facingLeft ? v.Geom.theta +. Geom.halfPi /. 2. : v.Geom.theta +. Geom.pi -. Geom.halfPi /. 2.) : faceRot
+  | Some((_, v, stone)) => {
+    if (v.Geom.magnitude > 5.) {
+      let percent = v.Geom.magnitude /. 200.;
+      let extra = Geom.halfPi /. 2. *. percent;
+      (state.player.facingLeft ? v.Geom.theta +. extra : v.Geom.theta +. Geom.pi -. extra)
+    } else {
+      faceRot
+    }
+  }
   };
   Draw.pushMatrix(env);
   Draw.translate(~x=x +. shoulder *. loff *. -1., ~y=armTop, env);
   Draw.rotate(rot, env);
   Players.male_arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_arm_width *. 0.2, 0.), ~flip=false, env);
+
+  switch state.player.throw {
+  | None => ()
+  | Some((_, v, stone)) => {
+    drawStone(context, {Geom.x: 0., y: Play_assets.Players.male_arm_height *. 0.4}, stone, env)
+  }
+  };
+
   Draw.popMatrix(env);
 
+  /* switch state.player.throw {
+  | None => ()
+  | Some((_, v, stone)) => {
+    drawStone(context, rockPos(state, v, stone), stone, env)
+  }
+  }; */
 
 };
 
@@ -141,13 +197,13 @@ let draw = (state, context, env) => {
     /* Draw.rectf(~pos=(x, y), ~width=blockSize -. 1., ~height=blockSize -. 1., env); */
   /* }, state.blocks); */
 
-  Draw.strokeWeight(3, env);
+  /* Draw.strokeWeight(3, env);
   Draw.stroke(Utils.color(~r=150, ~g=150, ~b=150, ~a=100), env);
-  switch (state.userInput.throw) {
+  switch (state.player.throw) {
   | None => ()
-  | Some((p1, vec)) => GeomDraw.vec(Geom.addPoints({Geom.x: 0., y: -40.}, state.player.box.pos), vec, env)
+  | Some((p1, vec, _)) => GeomDraw.vec(Geom.addPoints({Geom.x: 0., y: -40.}, state.player.box.pos), vec, env)
   };
-  Draw.noStroke(env);
+  Draw.noStroke(env); */
 
   Draw.noStroke(env);
   /* Draw.stroke(Constants.green, env); */
@@ -164,34 +220,25 @@ let draw = (state, context, env) => {
   state.stones |> List.iter(stone => {
     let {Geom.x,y} = stone.Stone.circle.center;
     if (y > y0 && y < y1) {
-      let circle = if (x > x0 && x < x1) {
-        Some(stone.Stone.circle)
+      let pos = if (x > x0 && x < x1) {
+        Some(stone.Stone.circle.Geom.Circle.center)
       } else {
         let left = x -. gameWidth;
         if (left > x0 && left < x1) {
-          Some(Geom.Circle.translate(stone.Stone.circle, {x: -.gameWidth, y: 0.}))
+          Some(Geom.addPoints(stone.Stone.circle.Geom.Circle.center, {x: -.gameWidth, y: 0.}))
         } else {
           let right = x +. gameWidth;
           if (right > x0 && right < x1) {
-            Some(Geom.Circle.translate(stone.Stone.circle, {x: +.gameWidth, y: 0.}))
+            Some(Geom.addPoints(stone.Stone.circle.Geom.Circle.center, {x: +.gameWidth, y: 0.}))
           } else {
             None
           }
         }
       };
-      switch circle {
+      switch pos {
       | None => ()
-      | Some(circle) => {
-        let (x, y) = Geom.tuple(circle.Geom.Circle.center);
-        let scale = stone.Stone.circle.rad /. Play_assets.Items.ore_coal_width *. 5.;
-        Draw.pushMatrix(env);
-        Draw.translate(~x, ~y, env);
-        Draw.rotate(stone.Stone.rotation, env);
-        Play_assets.Items.ore_coal(context.Shared.itemSheet, ~scale=scale, ~pos=(
-          -. Play_assets.Items.ore_coal_width *. scale /. 2.,
-          -. Play_assets.Items.ore_coal_height *. scale /. 2.,
-        ), ~flip=false, env);
-        Draw.popMatrix(env);
+      | Some(pos) => {
+        drawStone(context, pos, stone, env)
         /* GeomDraw.circle(circle, env) */
       }
       }

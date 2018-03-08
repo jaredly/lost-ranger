@@ -84,9 +84,8 @@ type player = {
   facingLeft: bool,
   isOnGround: bool,
   walkTimer: float,
-  /* throwing: option((Geom.vector, Projectile.kind)), */
   inventory: Inventory.t,
-  /* crouching, crouchingBox */
+  throw: option((Geom.point, Geom.vector, Stone.t)),
 };
 
 type userInput = {
@@ -94,11 +93,9 @@ type userInput = {
   right: bool,
   jump: bool,
   action: bool,
-  throw: option((Geom.point, Geom.vector)),
 };
 
 type state = {
-  /* blocks: Hashtbl.t((int, int), Block.t), */
   blocks: array(array(option(Block.t))),
   animals: list(Animal.t),
   trees: list(FruitTree.t),

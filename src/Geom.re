@@ -33,6 +33,7 @@ type point = {x: float, y: float};
 type vector = {magnitude: float, theta: float};
 let v0 = {magnitude: 0., theta: 0.};
 type pector = {dx: float, dy: float};
+let p0 = {dx: 0., dy: 0.};
 
 let tuple = ({x, y}) => (x, y);
 let intTuple = ({x, y}) => (int_of_float(x), int_of_float(y));
@@ -336,10 +337,12 @@ module Aabb = {
       (r.x1 +. rad -. hoff, y),
     ]
     |> List.map(((a, b)) => pectorToVector(pdiff({x, y},{x: a, y: b})))
-    )
+    );
+    let valid = sides
     |> List.filter((vec2) => addVectors(vec2, vec).magnitude -. vec.magnitude < 0.001 );
 
-    minMag(sides);
+
+    minMag(valid == [] ? sides : valid);
   };
 
   /* TODO get this working right */

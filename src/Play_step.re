@@ -1,5 +1,13 @@
 open Play_types;
 
+let pithyTexts = [
+  "Throw rocks... that's the whole game",
+  "Try throwing upward while jumping",
+  "There's often a cliff on the other side of the world",
+  "You could try playing golf",
+  "Many thanks to kenny.nl for the assets"
+];
+
 let followPlayer = (player, (a, b, w, h), gameWidth) => {
   let (a, player) = if (player.box.pos.x < 0.) {
     (a +. gameWidth, {...player, box: {...player.box, pos: {...player.box.pos, x: gameWidth +. player.box.pos.x}}})
@@ -28,7 +36,6 @@ let start = (env) => {
   let cols = int_of_float(width /. blockSize);
 
   let blocks = Array.make_matrix(500, 100, None);
-  /* let blocks = Hashtbl.create(1000); */
   let d = ref(0);
   for (x in 0 to 99) {
     let change = Random.float(10.) > 4.;
@@ -36,26 +43,15 @@ let start = (env) => {
       let off = ceil(sqrt(Random.float(16.)));
       d := min(10, max(-10, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
     };
-    /* let d = Random.int(5); */
     for (y in d^ to 50) {
-      /* print_endline(string_of_int(x) ++ " " ++ string_of_int(ground + y)); */
       blocks[ground + y][x] = Some(Block.init(Block.Dirt));
-      /* Hashtbl.add(blocks, (x, ground + y), Block.init(Block.Dirt)) */
     };
   };
   print_endline("populated");
 
-  /* for (y in 0 to ground - 1) {
-    Hashtbl.add(blocks, (0, y), Block.init(Block.Rock));
-    Hashtbl.add(blocks, (cols - 1, y), Block.init(Block.Rock))
-  }; */
-
-  /* for (y in 0 to 3) {
-    Hashtbl.replace(blocks, (y + cols - 10, ground - y), Block.init(Block.Rock))
-  }; */
-
   let player = {
     vel: Geom.v0,
+    throw: None,
     box: Geom.Rect.create({Geom.y: float_of_int(ground - 5) *. blockSize -. blockSize *. 1.9, x: blockSize}, blockSize *. 0.7, blockSize *. 1.4),
     throwSkill: 0.,
     isOnGround: false,
@@ -76,7 +72,7 @@ let start = (env) => {
     looseFruit: [],
     stones: [],
     userInput: {
-      left: false, right: false, jump: false, action: false, throw: None,
+      left: false, right: false, jump: false, action: false,
     },
     camera,
     player
@@ -113,6 +109,41 @@ let wrapX = (x, gameWidth) => x < 0. ? gameWidth +. x : (x > gameWidth ? x -. ga
 
 let wrap = ({Geom.x, y}, gameWidth) => {Geom.x: wrapX(x, gameWidth), y};
 
+/* let ensureStoneIsFree = (circle, vel, blocks) => {
+  let center = circle.Geom.Circle.center;
+  let notFree = Play_collide.blockCollision(center, Play_collide.testCircle(circle, Geom.p0), blocks);
+  if (notFree) {
+    let rec loop = (circle, i) => {
+      let notFree = Play_collide.blockCollision(center, Play_collide.testCircle(circle, Geom.p0), blocks);
+      if (notFree && i < 10) {
+
+        let fake = Geom.invertVector(vel);
+        let (_, push) = MoveStone.moveObject(
+          Geom.addVectorToPoint(vel, center),
+          /* center, */
+          fake,
+          /* Geom.v0, */
+          Geom.v0,
+          false,
+          Play_collide.testCircle(circle),
+          Play_collide.collideCircle(circle),
+          blocks
+        );
+        let push = Geom.addVectors(vel, push);
+
+        Printf.printf("Push: %0.2f %0.2f", push.Geom.theta, push.Geom.magnitude);
+        print_newline();
+        loop(Geom.Circle.push(circle, push), i + 1)
+      } else {
+        circle
+      }
+    };
+    loop(circle, 0)
+  } else {
+    circle
+  }
+}; */
+
 let moveStone = (stone, otherStones, blocks) => {
   open! Stone;
   let (_, vel) = MoveStone.moveObject(
@@ -141,45 +172,63 @@ let getUserInput = (prev, env) => Reprocessing.({
   right: Env.key(Events.Right, env),
   jump: Env.key(Events.Up, env),
   action: false,
-  throw: if (Env.mousePressed(env)) {
-    let pos = Geom.fromIntTuple(Env.mouse(env));
-    switch prev.throw {
-    | None => Some((pos, Geom.v0))
-    | Some((p1, p2)) => {
-      /* let vec =  */
-      Some((p1, Geom.pectorToVector(Geom.pdiff(pos, p1)) |> x => Geom.limitVector(x, 200.)))
-    }
-    }
-  } else {
-    None
-  }
 });
 
 let step = (state, context, env) => {
   let userInput = getUserInput(state.userInput, env);
 
   let stones = moveStones(state.stones, state.blocks);
-  let stones = userInput.throw == None
-  ? switch state.userInput.throw {
-  | None => stones
-  | Some((p1, vec)) => {
-    [Stone.{
-      vel: Geom.limitVector(Geom.scaleVector(vec, 0.1), 20.),
-      circle: Geom.Circle.{center: Geom.addPoints({Geom.x: 0., y: -40.}, state.player.box.pos),
-      rad: Random.float(10.) +. 5.
-      /* rad: 5. */
-      /* rad: 7. */
-    },
-      rotation: Random.float(Geom.tau),
-    }, ...stones]
-  }
-  } : stones;
+  let player = state.player;
+  let (stones, player) =
 
-  let player = movePlayer(userInput, state.player, state.blocks);
+  Reprocessing.(if (Env.mousePressed(env)) {
+    let pos = Geom.fromIntTuple(Env.mouse(env));
+    (stones, {...player, throw: switch player.throw {
+    | None => Some((pos, Geom.v0, {
+        let size = Random.float(10.) +. 5.;
+        {Stone.vel: Geom.v0, circle: {Geom.Circle.rad: size, center: {Geom.x: 0., y: 0.}},
+          rotation: Random.float(Geom.tau),
+        }
+      }))
+    | Some((p1, p2, item)) => {
+      /* let vec =  */
+      Some((p1, Geom.pectorToVector(Geom.pdiff(pos, p1)) |> x => Geom.limitVector(x, 200.), item))
+    }
+    }})
+  } else {
+    switch state.player.throw {
+    | None => (stones, player)
+    | Some((p1, vec, {Stone.circle: {rad}, rotation} as stone)) => {
+      let vel = Geom.limitVector(Geom.scaleVector(vec, 0.1), 25. -. rad);
+      let pos = Play_draw.rockPos(state, vec, stone);
+      let circle = Geom.Circle.{center: pos, rad: rad};
+      let circle = {
+        let center = circle.Geom.Circle.center;
+        let notFree = Play_collide.blockCollision(center, Play_collide.testCircle(circle, Geom.p0), state.blocks);
+        if (notFree) {
+          Geom.Circle.{...circle, center: Geom.addPoints(state.player.box.pos, {Geom.x: 0., y: -40.})}
+        } else {
+          circle
+        }
+      };
+      ([{
+        Stone.vel: Geom.addVectors(vel, state.player.vel),
+        circle,
+        rotation,
+        }, ...stones], {...player,
+        throw: None,
+        vel: Geom.addVectors(player.vel, Geom.scaleVector(vel, -0.01 *. rad))})
+      }
+    }
+  });
+
+
+  /* let player */
+  let player = movePlayer(userInput, player, state.blocks);
   let inputLeft = userInput.left ? true : (userInput.right ? false : player.facingLeft);
-  let facingLeft = switch userInput.throw {
+  let facingLeft = switch player.throw {
   | None => inputLeft
-  | Some((_, v)) => v.Geom.magnitude > 5. ? Geom.vx(v) < 0. : inputLeft
+  | Some((_, v, _)) => v.Geom.magnitude > 5. ? Geom.vx(v) < 0. : inputLeft
   };
   let walkTimer = (userInput.left || userInput.right ? player.walkTimer +. Reprocessing.Env.deltaTime(env) : 0.);
   let (camera, player) = followPlayer(player, state.camera, gameWidth);
