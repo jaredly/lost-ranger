@@ -131,5 +131,5 @@ let testRect = (rect, move, aabb) => Geom.Rect.testAabb(Geom.Rect.ptranslate(rec
 let collideRect = (rect, vel, move, aabb) => Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb);
 
 let testCircle = (circle, move, aabb) => Geom.Aabb.testCircle(aabb, Geom.Circle.ptranslate(circle, move));
-/* let collideCircle = (circle, vel, move, aabb) => Geom.Aabb.collideToCircle(Geom.invertVector(vel), aabb, Geom.Circle.ptranslate(circle, move)); */
-let collideCircle = (circle, vel, move, aabb) => Geom.Aabb.vectorToCircle(aabb, Geom.Circle.ptranslate(circle, move));
+let collideCircle = (circle, vel, move, aabb) => Geom.Aabb.collideToCircle(vel, aabb, Geom.Circle.ptranslate(circle, move));
+/* let collideCircle = (circle, vel, move, aabb) => Geom.Aabb.vectorToCircle(aabb, Geom.Circle.ptranslate(circle, move)); */

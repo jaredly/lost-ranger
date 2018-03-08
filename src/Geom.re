@@ -67,6 +67,7 @@ let addPectorToVector = (p, v) => addPectors(p, vectorToPector(v)) |> pectorToVe
 let invertVector = ({magnitude, theta}) => {magnitude, theta: theta +. 3.14159};
 let invertPector = ({dx, dy}) => {dx: -.dx, dy: -.dy};
 let scaleVector = ({magnitude, theta}, scale) => {theta, magnitude: magnitude *. scale};
+let addMagnitude = ({magnitude, theta}, mag) => {theta, magnitude: magnitude +. mag};
 let limitVector = ({magnitude, theta}, maxM) => {theta, magnitude: min(maxM, max(-.maxM, magnitude))};
 let addPoints = (p1, p2) => {x: p1.x +. p2.x, y: p1.y +. p2.y};
 let addPectorToPoint = ({dx, dy}, {x, y}) => {x: x +. dx, y: y +. dy};
@@ -220,8 +221,13 @@ module Arc = {
 };
 
 let minFst = items => switch items {
-| [] => assert(false)
+| [] => (0., 0.)
 | [first, ...rest] => List.fold_left(((a1, a2), (b1, b2)) => (a1 < b1 ? (a1, a2) : (b1, b2)), first, rest)
+};
+
+let minMag = items => switch items {
+| [] => v0
+| [first, ...rest] => List.fold_left((a, b) => (a.magnitude < b.magnitude ? a : b), first, rest)
 };
 
 module Aabb = {
@@ -308,29 +314,23 @@ module Aabb = {
   };
 
   /* TODO get this working right */
-  /* let collideToCircle = (vec, r, {Circle.center, rad} as c) => {
-    let {x, y} = center;
-    let tx = x < r.x0 ? r.x0 : r.x1;
-    let ty = y < r.y0 ? r.y0 : r.y1;
-    /* Circle.testPoint(c, {x: tx, y: ty}) */
-    let {magnitude, theta} = pectorToVector(pdiff(center, {x: tx, y: ty}));
+  let collideToCircle = (vec, r, {Circle.center: {x, y}, rad} as c) => {
+    /* let {magnitude, theta} = pectorToVector(pdiff(center, {x: tx, y: ty})); */
     let sides = [
-      (magnitude -. rad, theta),
-      (r.x1 -. (center.x -. rad), pi),
-      ((center.x +. rad) -. r.x0, 0.),
-      (r.y1 -. (center.y -. rad), -.halfPi),
-      ((center.y +. rad) -. r.y0, halfPi),
+      (r.x0, r.y0),
+      (r.x0, r.y1),
+      (r.x1, r.y0),
+      (r.x1, r.y1),
+      (x, r.y0),
+      (x, r.y1),
+      (r.x0, y),
+      (r.x1, y)
+    ]
+    |> List.map(((a, b)) => addMagnitude(pectorToVector(pdiff({x, y},{x: a, y: b})), rad))
+    |> List.filter((vec2) => addVectors(vec2, vec).magnitude -. vec.magnitude < 0.001 );
 
-      (rad -. abs_float(r.y0 -. y), -. halfPi),
-      (rad -. abs_float(y -. r.y1), halfPi),
-      (rad -. abs_float(r.x0 -. x), pi),
-      (rad -. abs_float(x -. r.x1), 0.),
-
-    ] |> List.filter(((magnitude, theta)) => addVectors({magnitude, theta}, vec).magnitude -. vec.magnitude < 0.001 );
-
-    let (magnitude, theta) = minFst(sides);
-    {theta, magnitude: -.magnitude}
-  }; */
+    minMag(sides);
+  };
 
   let testCircle = (r, {Circle.center, rad} as c) => {
     testPoint(r, center)
