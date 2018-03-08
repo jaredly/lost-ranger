@@ -87,6 +87,7 @@ let lerp = (a, b, amount) => a +. (b -. a) *. amount;
 module Circle = {
   type t = {rad: float, center: point};
   let translate = ({rad, center}, pos) => {rad, center: addPoints(center, pos)};
+  let ptranslate = ({rad, center}, pector) => {rad, center: addPectorToPoint(pector, center)};
 
   let testPoint = ({rad, center}, point) => dist(point, center) <= rad;
   let testCircle = (c1, c2) => dist(c1.center, c2.center) <= c1.rad +. c2.rad;
@@ -278,6 +279,51 @@ module Aabb = {
     ];
     let (magnitude, theta) = minFst(sides);
     {theta, magnitude}
+  };
+  /* let vectorToPoint = (b1, {x, y}) => {
+    let sides = [
+      (b1.x1 -. b2.x0, pi),
+      (b2.x1 -. b1.x0, 0.),
+      (b1.y1 -. b2.y0, -.halfPi),
+      (b2.y1 -. b1.y0, halfPi),
+    ];
+    let (magnitude, theta) = minFst(sides);
+    {theta, magnitude}
+  }; */
+
+  let vectorToCircle = (r, {Circle.center, rad} as c) => {
+    if (testPoint(r, center)) {
+      /* vectorToPoint(r, center); */
+      let sides = [
+        (r.x1 -. (center.x -. rad), pi),
+        ((center.x +. rad) -. r.x0, 0.),
+        (r.y1 -. (center.y -. rad), -.halfPi),
+        ((center.y +. rad) -. r.y0, halfPi),
+      ];
+      let (magnitude, theta) = minFst(sides);
+      {theta, magnitude}
+    } else {
+      let {x, y} = center;
+      if (r.x0 <= x && x <= r.x1) {
+        y < r.y0
+        ? {magnitude: rad -. abs_float(r.y0 -. y), theta: -. halfPi}
+        : {magnitude: rad -. abs_float(y -. r.y1), theta: halfPi}
+        /* v0 */
+      } else if (r.y0 <= y && y <= r.y1) {
+        /* v0 */
+        x < r.x0
+        ? {magnitude: rad -. abs_float(r.x0 -. x), theta: pi}
+        : {magnitude: rad -. abs_float(x -. r.x1), theta: 0.}
+      } else {
+        let tx = x < r.x0 ? r.x0 : r.x1;
+        let ty = y < r.y0 ? r.y0 : r.y1;
+        /* Circle.testPoint(c, {x: tx, y: ty}) */
+        let {magnitude, theta} = pectorToVector(pdiff(center, {x: tx, y: ty}));
+        {magnitude: magnitude -. rad, theta}
+        /* v0 */
+        /* assert(false) */
+      }
+    }
   };
 
   let testCircle = (r, {Circle.center, rad} as c) => {
