@@ -95,7 +95,8 @@ type userInput = {
 };
 
 type state = {
-  blocks: Hashtbl.t((int, int), Block.t),
+  /* blocks: Hashtbl.t((int, int), Block.t), */
+  blocks: array(array(option(Block.t))),
   animals: list(Animal.t),
   trees: list(FruitTree.t),
   looseFruit: list(Fruit.t),
@@ -111,3 +112,25 @@ type status =
   ;
 
 let blockSize = 40.;
+
+let getBlock = (blocks, (x, y)) => {
+  let maxy = Array.length(blocks) - 1;
+  if (y < 0 || y > maxy) {
+    None
+  } else {
+    let maxx = Array.length(blocks[0]) - 1;
+    let x = x < 0 ? maxx + 1 + x : (x > maxx ? x - maxx - 1: x);
+    blocks[y][x]
+  }
+};
+
+let hasBlock = (blocks, (x, y)) => {
+  let maxy = Array.length(blocks) - 1;
+  if (y < 0 || y > maxy) {
+    false
+  } else {
+    let maxx = Array.length(blocks[0]) - 1;
+    let x = x < 0 ? maxx + 1 + x : (x > maxx ? x - maxx - 1 : x);
+    blocks[y][x] != None
+  }
+};

@@ -4,21 +4,45 @@ open Reprocessing;
 let draw = (state, context, env) => {
   Draw.background(Constants.white, env);
 
-  let (dx, dy, _, _) = state.camera;
+  let (dx, dy, w, h) = state.camera;
 
   Draw.translate(~x=-.dx, ~y=-.dy, env);
 
-  Hashtbl.iter(((x, y), block) => {
-    let x = float_of_int(x) *. blockSize;
+
+  let x0 = int_of_float(dx /. blockSize) - 1;
+  let y0 = int_of_float(dy /. blockSize);
+  let ww = int_of_float(w /. blockSize) + 1;
+  let hh = int_of_float(h /. blockSize);
+  for (x in x0 to x0 + ww) {
+    for (y in y0 to y0 + ww) {
+      switch (getBlock(state.blocks, (x, y))) {
+      | None => ()
+      | Some(block) => {
+
+        let x = float_of_int(x) *. blockSize;
+        let y = float_of_int(y) *. blockSize;
+        let color = switch block.Block.kind {
+        | Block.Dirt => Reprocessing.Utils.color(~r=120, ~g=100, ~b=50, ~a=255)
+        | Block.Rock => Reprocessing.Utils.color(~r=50, ~g=50, ~b=70, ~a=255)
+        };
+        Draw.fill(color, env);
+        Draw.rectf(~pos=(x, y), ~width=blockSize , ~height=blockSize , env);
+
+      }
+      }
+    }
+  };
+  /* Hashtbl.iter(((x, y), block) => { */
+    /* let x = float_of_int(x) *. blockSize;
     let y = float_of_int(y) *. blockSize;
     let color = switch block.Block.kind {
     | Block.Dirt => Reprocessing.Utils.color(~r=120, ~g=100, ~b=50, ~a=255)
     | Block.Rock => Reprocessing.Utils.color(~r=50, ~g=50, ~b=70, ~a=255)
     };
     Draw.fill(color, env);
-    Draw.rectf(~pos=(x, y), ~width=blockSize , ~height=blockSize , env);
+    Draw.rectf(~pos=(x, y), ~width=blockSize , ~height=blockSize , env); */
     /* Draw.rectf(~pos=(x, y), ~width=blockSize -. 1., ~height=blockSize -. 1., env); */
-  }, state.blocks);
+  /* }, state.blocks); */
 
   Draw.noStroke(env);
   Draw.fill(Constants.green, env);

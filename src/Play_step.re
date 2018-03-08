@@ -1,44 +1,62 @@
 open Play_types;
 
-let followPlayer = ({Geom.x, y}, (a, b, w, h)) => {
+let followPlayer = (player, (a, b, w, h), gameWidth) => {
+  let (a, player) = if (player.box.pos.x < 0.) {
+    (a +. gameWidth, {...player, box: {...player.box, pos: {...player.box.pos, x: gameWidth +. player.box.pos.x}}})
+  } else if (player.box.pos.x > gameWidth) {
+    (a -. gameWidth, {...player, box: {...player.box, pos: {...player.box.pos, x: player.box.pos.x -. gameWidth}}})
+  } else {
+    (a, player)
+  };
+  let {Geom.x, y} = player.box.pos;
   let padding = w /. 3.;
-  (
+  ((
     max(min(x -. padding, a), x +. padding -. w),
     max(min(y -. padding, b), y +. padding -. h),
     w,
     h
-  )
+  ), player)
 };
+
+let gameWidth = blockSize *. 100.;
 
 let start = (env) => {
   let width = Reprocessing.Env.width(env) |> float_of_int;
   let height = Reprocessing.Env.height(env) |> float_of_int;
 
-  let ground = int_of_float(height /. blockSize) * 2 / 3;
+  let ground = 20;
   let cols = int_of_float(width /. blockSize);
 
-  let blocks = Hashtbl.create(1000);
+  let blocks = Array.make_matrix(500, 100, None);
+  /* let blocks = Hashtbl.create(1000); */
   let d = ref(0);
-  for (x in 0 to cols * 3) {
-    d := d^ + Random.int(4) - 2;
+  for (x in 0 to 99) {
+    let change = Random.float(10.) > 4.;
+    if (change) {
+      let off = ceil(sqrt(Random.float(16.)));
+      d := min(10, max(-10, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
+    };
     /* let d = Random.int(5); */
-    for (y in d^ to 10) {
-      Hashtbl.add(blocks, (x, ground + y), Block.init(Block.Dirt))
+    for (y in d^ to 50) {
+      /* print_endline(string_of_int(x) ++ " " ++ string_of_int(ground + y)); */
+      blocks[ground + y][x] = Some(Block.init(Block.Dirt));
+      /* Hashtbl.add(blocks, (x, ground + y), Block.init(Block.Dirt)) */
     };
   };
+  print_endline("populated");
 
   /* for (y in 0 to ground - 1) {
     Hashtbl.add(blocks, (0, y), Block.init(Block.Rock));
     Hashtbl.add(blocks, (cols - 1, y), Block.init(Block.Rock))
   }; */
 
-  for (y in 0 to 3) {
+  /* for (y in 0 to 3) {
     Hashtbl.replace(blocks, (y + cols - 10, ground - y), Block.init(Block.Rock))
-  };
+  }; */
 
   let player = {
     vel: Geom.v0,
-    box: Geom.Rect.create({Geom.y: float_of_int(ground - 5) *. blockSize -. blockSize *. 1.9, x: blockSize}, blockSize *. 0.8, blockSize *. 1.8),
+    box: Geom.Rect.create({Geom.y: float_of_int(ground - 5) *. blockSize -. blockSize *. 1.9, x: blockSize}, blockSize *. 0.7, blockSize *. 1.4),
     throwSkill: 0.,
     inventory: {
       Inventory.size: 20,
@@ -46,6 +64,7 @@ let start = (env) => {
       selected: 0
     }
   };
+  let (camera, player) = followPlayer(player, (0., 0., width, height), gameWidth);
 
   {
     animals: [],
@@ -56,7 +75,7 @@ let start = (env) => {
     userInput: {
       left: false, right: false, jump: false, action: false, throw: None,
     },
-    camera: followPlayer(player.box.pos, (0., 0., width, height)),
+    camera,
     player
   }
 };
@@ -87,6 +106,10 @@ let movePlayer = (userInput, player, blocks) => {
   {...player, vel, box: Geom.Rect.push(player.box, vel)}
 };
 
+let wrapX = (x, gameWidth) => x < 0. ? gameWidth +. x : (x > gameWidth ? x -. gameWidth : x);
+
+let wrap = ({Geom.x, y}, gameWidth) => {Geom.x: wrapX(x, gameWidth), y};
+
 let moveStone = (stone, otherStones, blocks) => {
   open! Stone;
   let vel = MoveStone.moveObject(
@@ -99,7 +122,7 @@ let moveStone = (stone, otherStones, blocks) => {
     blocks
   );
   /* print_endline(string_of_float(vel.Geom.magnitude)); */
-  {vel, circle: Geom.Circle.push(stone.circle, vel)}
+  {vel, circle: {...stone.circle, center: wrap(Geom.addVectorToPoint(vel, stone.circle.center), gameWidth)}}
 };
 
 let moveStones = (stones, blocks) => {
@@ -145,11 +168,12 @@ let step = (state, context, env) => {
   } : stones;
 
   let player = movePlayer(userInput, state.player, state.blocks);
+  let (camera, player) = followPlayer(player, state.camera, gameWidth);
   {
     ...state,
     userInput,
     stones,
-    camera: followPlayer(player.box.pos, state.camera),
+    camera,
     player
   }
 };

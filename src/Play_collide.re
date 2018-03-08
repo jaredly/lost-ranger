@@ -25,7 +25,7 @@ let blockCollision = (center, check, blocks) => {
   List.exists(
     ((dx, dy)) => {
       let x = x + dx; let y = y + dy;
-      if (Hashtbl.mem(blocks, (x,y))) {
+      if (hasBlock(blocks, (x,y))) {
         let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
         check(blockBox)
       } else {
@@ -42,7 +42,7 @@ let blockCollide = (center, vel, bounce, check, getCollisionVector, blocks) => {
   List.fold_left(
     ((moved, vel), (dx, dy)) => {
       let x = x + dx; let y = y + dy;
-      if (Hashtbl.mem(blocks, (x,y))) {
+      if (hasBlock(blocks, (x,y))) {
         let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
         if (check(moved, blockBox)) {
           let add = getCollisionVector(vel, moved, blockBox);
