@@ -11,6 +11,8 @@ let drawPlayer = (state, context, env) => {
   let (x, y) = Geom.tuple(state.player.box.pos);
   let y = y -. 10.;
 
+  let module Players = Play_assets.Players;
+
   /* Legs */
   let amp = Geom.halfPi /. 2.;
   let amp = abs_float(Geom.vx(state.player.vel)) > 0.001 ? amp : 0.;
@@ -21,46 +23,46 @@ let drawPlayer = (state, context, env) => {
     (Geom.halfPi *. amp /. 2., -. Geom.halfPi *. amp /. 2.)
   };
   Draw.pushMatrix(env);
-  Draw.translate(~x, ~y=y +. Play_assets.male_body_height *. 0.2 +. 5., env);
+  Draw.translate(~x, ~y=y +. Players.male_body_height *. 0.2 +. 5., env);
   Draw.rotate(walk, env);
-  Play_assets.male_leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Play_assets.male_leg_width *. 0.2, 0.), ~flip=false, env);
+  Players.male_leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_leg_width *. 0.2, 0.), ~flip=false, env);
   Draw.rotate(-.walk +. walk2, env);
-  Play_assets.male_leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Play_assets.male_leg_width *. 0.2, 0.), ~flip=false, env);
+  Players.male_leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_leg_width *. 0.2, 0.), ~flip=false, env);
   Draw.popMatrix(env);
 
 
   /* arm behind */
   let loff = state.player.facingLeft ? 1. : -1.;
   let shoulder = -4.;
-  let armTop = y -. Play_assets.male_body_height *. 0.2 +. 10.;
+  let armTop = y -. Players.male_body_height *. 0.2 +. 10.;
   Draw.pushMatrix(env);
   Draw.translate(~x=x +. shoulder *. loff, ~y=armTop, env);
   Draw.rotate(state.player.facingLeft ? walk/.2. : walk2/.2., env);
-  Play_assets.male_arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Play_assets.male_arm_width *. 0.2, 0.), ~flip=false, env);
+  Players.male_arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_arm_width *. 0.2, 0.), ~flip=false, env);
   Draw.popMatrix(env);
 
 
 
   /* body */
-  Play_assets.male_body(context.Shared.charSheet, ~scale=0.4, ~flip=false,
-  ~pos=(x -. Play_assets.male_body_width *. 0.2, y -. Play_assets.male_body_height *. 0.2 +. 5.), env);
+  Players.male_body(context.Shared.charSheet, ~scale=0.4, ~flip=false,
+  ~pos=(x -. Players.male_body_width *. 0.2, y -. Players.male_body_height *. 0.2 +. 5.), env);
 
   /* Head! */
   Draw.pushMatrix(env);
-  Draw.translate(~x=x, ~y=y -. Play_assets.male_head_height *. 0.2 -. 5., env);
+  Draw.translate(~x=x, ~y=y -. Players.male_head_height *. 0.2 -. 5., env);
   let bob = sin(state.player.walkTimer *. 20.) *. amp;
   let bob = state.player.isOnGround ? bob : 0.;
   Draw.translate(~x=0., ~y=bob *. 2., env);
   /* Draw.rotate(state.player.facingLeft ? walk : -. walk, env); */
-  Play_assets.male_head(context.Shared.charSheet, ~scale=0.4, ~flip=!state.player.facingLeft,
-  ~pos=( -. Play_assets.male_head_width *. 0.2, -. Play_assets.male_head_width *. 0.2 ), env);
+  Players.male_head(context.Shared.charSheet, ~scale=0.4, ~flip=!state.player.facingLeft,
+  ~pos=( -. Players.male_head_width *. 0.2, -. Players.male_head_width *. 0.2 ), env);
   Draw.popMatrix(env);
 
   /* arm in front */
   Draw.pushMatrix(env);
   Draw.translate(~x=x +. shoulder *. loff *. -1., ~y=armTop, env);
   Draw.rotate(state.player.facingLeft ? walk2/.2. : walk/.2., env);
-  Play_assets.male_arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Play_assets.male_arm_width *. 0.2, 0.), ~flip=false, env);
+  Players.male_arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_arm_width *. 0.2, 0.), ~flip=false, env);
   Draw.popMatrix(env);
 
 
@@ -133,18 +135,36 @@ let draw = (state, context, env) => {
   state.stones |> List.iter(stone => {
     let {Geom.x,y} = stone.Stone.circle.center;
     if (y > y0 && y < y1) {
-      if (x > x0 && x < x1) {
-        GeomDraw.circle(stone.Stone.circle, env);
+      let circle = if (x > x0 && x < x1) {
+        Some(stone.Stone.circle)
       } else {
         let left = x -. gameWidth;
         if (left > x0 && left < x1) {
-          GeomDraw.circle(Geom.Circle.translate(stone.Stone.circle, {x: -.gameWidth, y: 0.}), env)
+          Some(Geom.Circle.translate(stone.Stone.circle, {x: -.gameWidth, y: 0.}))
         } else {
           let right = x +. gameWidth;
           if (right > x0 && right < x1) {
-            GeomDraw.circle(Geom.Circle.translate(stone.Stone.circle, {x: +.gameWidth, y: 0.}), env)
+            Some(Geom.Circle.translate(stone.Stone.circle, {x: +.gameWidth, y: 0.}))
+          } else {
+            None
           }
         }
+      };
+      switch circle {
+      | None => ()
+      | Some(circle) => {
+        let (x, y) = Geom.tuple(circle.Geom.Circle.center);
+        let scale = 0.3;
+        Draw.pushMatrix(env);
+        Draw.translate(~x, ~y, env);
+        Draw.rotate(stone.Stone.rotation, env);
+        Play_assets.Items.ore_coal(context.Shared.itemSheet, ~scale=scale, ~pos=(
+          -. Play_assets.Items.ore_coal_width *. scale /. 2.,
+          -. Play_assets.Items.ore_coal_height *. scale /. 2.,
+        ), ~flip=false, env);
+        Draw.popMatrix(env);
+        /* GeomDraw.circle(circle, env) */
+      }
       }
     };
     /* Draw.ellipsef(~center=Geom.tuple(stone.Stone.circle.center), ~radx=10., ~rady=10., env); */

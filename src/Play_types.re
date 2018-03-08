@@ -42,11 +42,11 @@ module Block = {
 
 module Fruit = {
   type kind = Apple | Peach;
-  type t = {kind, vel: Geom.vector, circle: Geom.Circle.t}
+  type t = {kind, vel: Geom.vector, circle: Geom.Circle.t, rotation: float}
 };
 
 module Stone = {
-  type t = {circle: Geom.Circle.t, vel: Geom.vector};
+  type t = {circle: Geom.Circle.t, vel: Geom.vector, rotation: float};
 };
 
 module FruitTree = {

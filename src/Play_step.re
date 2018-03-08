@@ -125,7 +125,7 @@ let moveStone = (stone, otherStones, blocks) => {
     blocks
   );
   /* print_endline(string_of_float(vel.Geom.magnitude)); */
-  {vel, circle: {...stone.circle, center: wrap(Geom.addVectorToPoint(vel, stone.circle.center), gameWidth)}}
+  {vel, rotation: stone.rotation, circle: {...stone.circle, center: wrap(Geom.addVectorToPoint(vel, stone.circle.center), gameWidth)}}
 };
 
 let moveStones = (stones, blocks) => {
@@ -165,7 +165,8 @@ let step = (state, context, env) => {
   | Some((p1, vec)) => {
     [Stone.{
       vel: Geom.limitVector(Geom.scaleVector(vec, 0.1), 20.),
-      circle: Geom.Circle.{center: state.player.box.pos, rad: 7.}
+      circle: Geom.Circle.{center: state.player.box.pos, rad: 7.},
+      rotation: Random.float(Geom.tau),
     }, ...stones]
   }
   } : stones;
