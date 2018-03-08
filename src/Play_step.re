@@ -44,7 +44,7 @@ let start = (env) => {
       d := min(10, max(-10, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
     };
     for (y in d^ to 50) {
-      blocks[ground + y][x] = Some(Block.init(Block.Dirt));
+      blocks[ground + y][x] = Some(Block.init(Block.Dirt, y == d^));
     };
   };
   print_endline("populated");

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker https://www.codeandweb.com/texturepacker -->
+<!-- $TexturePacker:SmartUpdate:f574db2c004ec21edf810afe2548f28b:4624a911c9a67e106f4dd10d2f1d8440:97adc8a11deac9040648c37a057a8e5b$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+pX => x pos of the pivot point (relative to sprite width)
+pY => y pos of the pivot point (relative to sprite height)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+with polygon mode enabled:
+vertices   => points in sprite coordinate system (x0,y0,x1,y1,x2,y2, ...)
+verticesUV => points in sheet coordinate system (x0,y0,x1,y1,x2,y2, ...)
+triangles  => sprite triangulation, 3 vertex indices per triangle
+-->
+<TextureAtlas imagePath="extra_items.png" width="128" height="532">
+    <sprite n="arrow_fletched.png" x="84" y="0" w="24" h="140" pX="0.5" pY="0.5"/>
+    <sprite n="arrow_iron.png" x="0" y="0" w="20" h="140" pX="0.5" pY="0.5"/>
+    <sprite n="arrow_stone.png" x="20" y="0" w="20" h="140" pX="0.5" pY="0.5"/>
+    <sprite n="arrow_thinner.png" x="0" y="140" w="24" h="128" pX="0.5" pY="0.5"/>
+    <sprite n="arrow_thinner2.png" x="60" y="0" w="24" h="130" pX="0.5" pY="0.5"/>
+    <sprite n="arrow_wood.png" x="40" y="0" w="20" h="140" pX="0.5" pY="0.5"/>
+    <sprite n="dirt_top.png" x="0" y="428" w="128" h="52" pX="0.5" pY="0.5"/>
+    <sprite n="grass_top.png" x="0" y="480" w="128" h="52" pX="0.5" pY="0.5"/>
+    <sprite n="grass_top_2.png" x="0" y="376" w="128" h="52" pX="0.5" pY="0.5"/>
+    <sprite n="ice_top.png" x="0" y="268" w="128" h="54" pX="0.5" pY="0.5"/>
+    <sprite n="sand_top.png" x="0" y="322" w="128" h="54" pX="0.5" pY="0.5"/>
+</TextureAtlas>

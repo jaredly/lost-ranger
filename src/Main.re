@@ -36,6 +36,7 @@ let setup = (assetDir, env) => {
     charSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"SpriteSheets"/+Play_assets.Players.source, env),
     itemSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"SpriteSheets"/+Play_assets.Items.source, env),
     tileSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"SpriteSheets"/+Play_assets.Tiles.source, env),
+    extraItemsSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"SpriteSheets"/+Play_assets.ExtraItems.source, env),
     Shared.titleFont: Reprocessing.Draw.loadFont( ~filename=assetDir /+ "Orbitron-Black-48.fnt", ~isPixel=false, env),
     smallTitleFont: Reprocessing.Draw.loadFont( ~filename=assetDir /+ "Orbitron-Regular-24.fnt", ~isPixel=false, env),
     boldTextFont: Reprocessing.Draw.loadFont( ~filename=assetDir /+ "Orbitron-Black-24.fnt", ~isPixel=false, env),

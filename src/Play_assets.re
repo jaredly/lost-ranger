@@ -35,7 +35,7 @@ type sprite = (~pos: (float, float), ~width: float, ~height: float) => unit;
   	let sprites = lines |> List.map (fun line -> begin
   		let parts = split "\"" line in
   		match parts with
-  		| [_; file; _; x; _; y; _; width; _; height; _] ->
+  		| _::file:: _:: x:: _:: y:: _:: width:: _:: height:: _ ->
   			let [name; _] = split "." file in
   			Some(name, x, y, width, height)
   		| _ -> None
@@ -238,6 +238,22 @@ type sprite = (~pos: (float, float), ~width: float, ~height: float) => unit;
   |}
 
   let _ = process "Tiles" raw_tiles "spritesheet_tiles.png"
+
+  let raw_extra = {|
+      <sprite n="arrow_fletched.png" x="84" y="0" w="24" h="140" pX="0.5" pY="0.5"/>
+      <sprite n="arrow_iron.png" x="0" y="0" w="20" h="140" pX="0.5" pY="0.5"/>
+      <sprite n="arrow_stone.png" x="20" y="0" w="20" h="140" pX="0.5" pY="0.5"/>
+      <sprite n="arrow_thinner.png" x="0" y="140" w="24" h="128" pX="0.5" pY="0.5"/>
+      <sprite n="arrow_thinner2.png" x="60" y="0" w="24" h="130" pX="0.5" pY="0.5"/>
+      <sprite n="arrow_wood.png" x="40" y="0" w="20" h="140" pX="0.5" pY="0.5"/>
+      <sprite n="dirt_top.png" x="0" y="428" w="128" h="52" pX="0.5" pY="0.5"/>
+      <sprite n="grass_top.png" x="0" y="480" w="128" h="52" pX="0.5" pY="0.5"/>
+      <sprite n="grass_top_2.png" x="0" y="376" w="128" h="52" pX="0.5" pY="0.5"/>
+      <sprite n="ice_top.png" x="0" y="268" w="128" h="54" pX="0.5" pY="0.5"/>
+      <sprite n="sand_top.png" x="0" y="322" w="128" h="54" pX="0.5" pY="0.5"/>
+  |}
+
+  let _ = process "ExtraItems" raw_extra "extra_items.png"
 
   */ module Players = {
        let source = "spritesheet_characters.png";
@@ -773,5 +789,42 @@ module Tiles = {
   let wood_red = sprite({x: 0, y: 130, width: 128, height: 128});
   let wood_red_width = 128.;
   let wood_red_height = 128.;
+};
+
+module ExtraItems = {
+  let source = "extra_items.png";
+  let arrow_fletched = sprite({x: 84, y: 0, width: 24, height: 140});
+  let arrow_fletched_width = 24.;
+  let arrow_fletched_height = 140.;
+  let arrow_iron = sprite({x: 0, y: 0, width: 20, height: 140});
+  let arrow_iron_width = 20.;
+  let arrow_iron_height = 140.;
+  let arrow_stone = sprite({x: 20, y: 0, width: 20, height: 140});
+  let arrow_stone_width = 20.;
+  let arrow_stone_height = 140.;
+  let arrow_thinner = sprite({x: 0, y: 140, width: 24, height: 128});
+  let arrow_thinner_width = 24.;
+  let arrow_thinner_height = 128.;
+  let arrow_thinner2 = sprite({x: 60, y: 0, width: 24, height: 130});
+  let arrow_thinner2_width = 24.;
+  let arrow_thinner2_height = 130.;
+  let arrow_wood = sprite({x: 40, y: 0, width: 20, height: 140});
+  let arrow_wood_width = 20.;
+  let arrow_wood_height = 140.;
+  let dirt_top = sprite({x: 0, y: 428, width: 128, height: 52});
+  let dirt_top_width = 128.;
+  let dirt_top_height = 52.;
+  let grass_top = sprite({x: 0, y: 480, width: 128, height: 52});
+  let grass_top_width = 128.;
+  let grass_top_height = 52.;
+  let grass_top_2 = sprite({x: 0, y: 376, width: 128, height: 52});
+  let grass_top_2_width = 128.;
+  let grass_top_2_height = 52.;
+  let ice_top = sprite({x: 0, y: 268, width: 128, height: 54});
+  let ice_top_width = 128.;
+  let ice_top_height = 54.;
+  let sand_top = sprite({x: 0, y: 322, width: 128, height: 54});
+  let sand_top_width = 128.;
+  let sand_top_height = 54.;
 };
 /*$*/

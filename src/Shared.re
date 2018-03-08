@@ -13,6 +13,7 @@ type context = {
   charSheet: Reprocessing.imageT,
   itemSheet: Reprocessing.imageT,
   tileSheet: Reprocessing.imageT,
+  extraItemsSheet: Reprocessing.imageT,
 };
 
 type globalState('status) = {

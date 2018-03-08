@@ -6,16 +6,17 @@ let textColor = Constants.black;
 let gameWidth = blockSize *. 100.;
 
 let drawStone = (context, pos, stone, env) => {
-        let (x, y) = Geom.tuple(pos);
-        let scale = stone.Stone.circle.rad /. Play_assets.Items.ore_coal_width *. 5.;
-        Draw.pushMatrix(env);
-        Draw.translate(~x, ~y, env);
-        Draw.rotate(stone.Stone.rotation, env);
-        Play_assets.Items.ore_coal(context.Shared.itemSheet, ~scale=scale, ~pos=(
-          -. Play_assets.Items.ore_coal_width *. scale /. 2.,
-          -. Play_assets.Items.ore_coal_height *. scale /. 2.,
-        ), ~flip=false, env);
-        Draw.popMatrix(env);
+  let (x, y) = Geom.tuple(pos);
+  let scale = stone.Stone.circle.rad /. Play_assets.Items.ore_coal_width *. 5.;
+  Draw.pushMatrix(env);
+  Draw.translate(~x, ~y, env);
+  Draw.rotate(stone.Stone.rotation, env);
+  /* Play_assets.ExtraItems.arrow_stone(context.Shared.extraItemsSheet, ~scale=scale, ~pos=( */
+  Play_assets.Items.ore_coal(context.Shared.itemSheet, ~scale=scale, ~pos=(
+    -. Play_assets.Items.ore_coal_width *. scale /. 2.,
+    -. Play_assets.Items.ore_coal_height *. scale /. 2.,
+  ), ~flip=false, env);
+  Draw.popMatrix(env);
 
 };
 
@@ -159,6 +160,8 @@ let draw = (state, context, env) => {
         let y = float_of_int(y) *. blockSize +. blockSize /. 2.;
         let sprite = switch block.Block.kind {
         | Block.Dirt => Play_assets.Tiles.dirt
+        /* | Block.Dirt => Play_assets.ExtraItems.grass_top */
+        /* | Block.Rock => Play_assets.ExtraItems.sand_top */
         | Block.Rock => Play_assets.Tiles.rock
         };
 
@@ -171,6 +174,10 @@ let draw = (state, context, env) => {
         Draw.translate(~x, ~y, env);
         Draw.rotate(rot, env);
         sprite(context.Shared.tileSheet, ~pos=(-.blockSize /. 2., -.blockSize/.2.), ~scale=blockSize /. 128., ~flip=false, env);
+        if (block.top) {
+          Draw.rotate(-.rot, env);
+          Play_assets.ExtraItems.grass_top(context.Shared.extraItemsSheet, ~pos=(-.blockSize /. 2., -.blockSize/.2.), ~scale=blockSize /. 128., ~flip=false, env);
+        };
         Draw.popMatrix(env);
 
         /* let color = switch block.Block.kind {

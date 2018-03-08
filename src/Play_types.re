@@ -34,10 +34,11 @@ module Block = {
   type blockKind = | Dirt | Rock;
   type t = {
     kind: blockKind,
+    top: bool,
     damage: float,
     stuckArrows: list(Arrow.t),
   };
-  let init = kind => {kind, damage: 0., stuckArrows: []};
+  let init = (kind, top) => {kind, damage: 0., stuckArrows: [], top};
 };
 
 module Fruit = {
