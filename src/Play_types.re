@@ -100,6 +100,7 @@ type state = {
   trees: list(FruitTree.t),
   looseFruit: list(Fruit.t),
   stones: list(Stone.t),
+  camera: (float, float, float, float),
   userInput,
   player
 };

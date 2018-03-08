@@ -224,28 +224,6 @@ let minFst = items => switch items {
 | [first, ...rest] => List.fold_left(((a1, a2), (b1, b2)) => (a1 < b1 ? (a1, a2) : (b1, b2)), first, rest)
 };
 
-/* let minVectorDiff = (vector, items) => {
-  let items = items |> List.map(((magnitude, theta)) => addVectors(vector, {magnitude, theta}));
-  let mag = abs_float(vector.magnitude);
-  switch items {
-| [] => assert(false)
-| [first, ...rest] =>
-List.fold_left((c1, c2) =>
-    if (abs_float(c1.magnitude) > mag) {
-      c2
-    } else if (abs_float(c2.magnitude) > mag) {
-      c1
-    } else {
-      if (thetaDiff(c1.theta, vector.theta) > thetaDiff(c2.theta , vector.theta)) {
-        c2
-      } else {
-        c1
-      }
-    } ,
-first, rest)
-};
-}; */
-
 module Aabb = {
   type t = {x0: float, y0: float, x1: float, y1: float};
   let testPoint = ({x0, y0, x1, y1}, {x, y}) => {

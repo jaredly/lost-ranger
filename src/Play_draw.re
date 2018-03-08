@@ -3,6 +3,11 @@ open Reprocessing;
 
 let draw = (state, context, env) => {
   Draw.background(Constants.white, env);
+
+  let (dx, dy, _, _) = state.camera;
+
+  Draw.translate(~x=-.dx, ~y=-.dy, env);
+
   Hashtbl.iter(((x, y), block) => {
     let x = float_of_int(x) *. blockSize;
     let y = float_of_int(y) *. blockSize;

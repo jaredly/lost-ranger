@@ -1,5 +1,15 @@
 open Play_types;
 
+let followPlayer = ({Geom.x, y}, (a, b, w, h)) => {
+  let padding = w /. 3.;
+  (
+    max(min(x -. padding, a), x +. padding -. w),
+    max(min(y -. padding, b), y +. padding -. h),
+    w,
+    h
+  )
+};
+
 let start = (env) => {
   let width = Reprocessing.Env.width(env) |> float_of_int;
   let height = Reprocessing.Env.height(env) |> float_of_int;
@@ -8,19 +18,33 @@ let start = (env) => {
   let cols = int_of_float(width /. blockSize);
 
   let blocks = Hashtbl.create(1000);
-  for (y in 0 to 10) {
-    for (x in 0 to cols) {
+  let d = ref(0);
+  for (x in 0 to cols * 3) {
+    d := d^ + Random.int(4) - 2;
+    /* let d = Random.int(5); */
+    for (y in d^ to 10) {
       Hashtbl.add(blocks, (x, ground + y), Block.init(Block.Dirt))
     };
   };
 
-  for (y in 0 to ground - 1) {
+  /* for (y in 0 to ground - 1) {
     Hashtbl.add(blocks, (0, y), Block.init(Block.Rock));
     Hashtbl.add(blocks, (cols - 1, y), Block.init(Block.Rock))
-  };
+  }; */
 
   for (y in 0 to 3) {
     Hashtbl.replace(blocks, (y + cols - 10, ground - y), Block.init(Block.Rock))
+  };
+
+  let player = {
+    vel: Geom.v0,
+    box: Geom.Rect.create({Geom.y: float_of_int(ground - 5) *. blockSize -. blockSize *. 1.9, x: blockSize}, blockSize *. 0.8, blockSize *. 1.8),
+    throwSkill: 0.,
+    inventory: {
+      Inventory.size: 20,
+      slots: Array.make(20, Inventory.Nothing),
+      selected: 0
+    }
   };
 
   {
@@ -28,20 +52,12 @@ let start = (env) => {
     trees: [],
     blocks,
     looseFruit: [],
-    stones: [Stone.{circle: {center: {x: 100., y: 300.}, rad: 10.}, vel: Geom.v0}],
+    stones: [],
     userInput: {
       left: false, right: false, jump: false, action: false, throw: None,
     },
-    player: {
-      vel: Geom.v0,
-      box: Geom.Rect.create({Geom.y: float_of_int(ground) *. blockSize -. blockSize *. 1.9, x: blockSize *. 4.1}, blockSize *. 0.8, blockSize *. 1.8),
-      throwSkill: 0.,
-      inventory: {
-        Inventory.size: 20,
-        slots: Array.make(20, Inventory.Nothing),
-        selected: 0
-      }
-    }
+    camera: followPlayer(player.box.pos, (0., 0., width, height)),
+    player
   }
 };
 
@@ -123,15 +139,17 @@ let step = (state, context, env) => {
   | Some((p1, vec)) => {
     [Stone.{
       vel: Geom.limitVector(Geom.scaleVector(vec, 0.1), 20.),
-      circle: Geom.Circle.{center: state.player.box.pos, rad: 10.}
+      circle: Geom.Circle.{center: state.player.box.pos, rad: 7.}
     }, ...stones]
   }
   } : stones;
 
+  let player = movePlayer(userInput, state.player, state.blocks);
   {
     ...state,
     userInput,
     stones,
-    player: movePlayer(userInput, state.player, state.blocks)
+    camera: followPlayer(player.box.pos, state.camera),
+    player
   }
 };
