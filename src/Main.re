@@ -33,10 +33,10 @@ let setup = (assetDir, env) => {
   let context = {
     height,
     width,
-    charSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"SpriteSheets"/+Play_assets.Players.source, env),
-    itemSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"SpriteSheets"/+Play_assets.Items.source, env),
-    tileSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"SpriteSheets"/+Play_assets.Tiles.source, env),
-    extraItemsSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"SpriteSheets"/+Play_assets.ExtraItems.source, env),
+    charSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"Spritesheets"/+Play_assets.Players.source, env),
+    itemSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"Spritesheets"/+Play_assets.Items.source, env),
+    tileSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"Spritesheets"/+Play_assets.Tiles.source, env),
+    extraItemsSheet: Reprocessing.Draw.loadImage(~filename=assetDir/+"Spritesheets"/+Play_assets.ExtraItems.source, env),
     Shared.titleFont: Reprocessing.Draw.loadFont( ~filename=assetDir /+ "Orbitron-Black-48.fnt", ~isPixel=false, env),
     smallTitleFont: Reprocessing.Draw.loadFont( ~filename=assetDir /+ "Orbitron-Regular-24.fnt", ~isPixel=false, env),
     boldTextFont: Reprocessing.Draw.loadFont( ~filename=assetDir /+ "Orbitron-Black-24.fnt", ~isPixel=false, env),
@@ -61,7 +61,7 @@ let draw = ({Shared.screenState, context}, env) => {
 
 let run = (assetDir, _) => Reprocessing.run(
   ~setup=setup(assetDir),
-  ~title="PurpleMaze",
+  ~title="Throw Rocks",
   ~draw,
   ()
 );
