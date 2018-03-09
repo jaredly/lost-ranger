@@ -168,25 +168,6 @@ let joystickButton = (pos, env) => {
     }
     }
   }, None);
-  /* let circle = Play_draw.joystickCircle(env);
-  if (Geom.Circle.testPoint(circle, pos)) {
-    /* let angle = Geom.angleTo(circle.Geom.Circle.center, pos) |> Geom.normalize; */
-    let pector = Geom.pdiff(circle.Geom.Circle.center, pos);
-    if (pector.dy < 0. && -.pector.dy > abs_float(pector.dx)) {
-      if (-.pector.dy > 2. *. abs_float(pector.dx)) {
-        Some(`Jump)
-      } else {
-        Some(pector.dx > 0. ? `JumpRight : `JumpLeft)
-      }
-    } else if (pector.dx > 0.) {
-    /* if (Geom.isThetaBetween(-.Geom.halfPi, Geom.halfPi, angle)) { */
-      Some(`Right)
-    } else {
-      Some(`Left)
-    }
-  } else {
-    None
-  } */
 };
 
 let getTouchInput = (state, env) => {

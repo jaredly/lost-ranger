@@ -417,6 +417,32 @@ let touchButtons = env => {
   ]
 };
 
+let drawControl = (control, pos, env) => {
+  open Geom;
+  let size = 50.;
+  let p1 = {Geom.x: -.size *. 0.55, y: -.size *. 0.75};
+  let p2 = {Geom.x: size *. 0.75, y: 0.};
+  let p3 = {Geom.x: -.size *. 0.55, y: size *. 0.75};
+  Draw.noStroke(env);
+  Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=50), env);
+  /* Draw.strokeWeight(10, env); */
+  Draw.translate(~x=pos.x, ~y=pos.y, env);
+  switch control {
+  | `Left => {
+    /* Draw.linef(~p1=Geom.tuple(p1), ~p2=Geom.tuple(p2), env); */
+    /* Draw.linef(~p1=Geom.tuple(p2), ~p2=Geom.tuple(p3), env); */
+    Draw.trianglef(~p1=Geom.tuple(Geom.flipX(p1)), ~p2=Geom.tuple(Geom.flipX(p2)), ~p3=Geom.tuple(Geom.flipX(p3)), env);
+  }
+  | `Right => {
+    Draw.trianglef(~p1=Geom.tuple(p1), ~p2=Geom.tuple(p2), ~p3=Geom.tuple(p3), env);
+  }
+  | _ => {
+    Draw.trianglef(~p1=Geom.tuple(Geom.flipXY(p1) |> Geom.flipY), ~p2=Geom.tuple(Geom.flipXY(p2) |> Geom.flipY), ~p3=Geom.tuple(Geom.flipXY(p3) |> Geom.flipY), env);
+  }
+  };
+  Draw.translate(~x=-.pos.x, ~y=-.pos.y, env);
+};
+
 let joystickCircle = env => {
   let bottom = Reprocessing.Env.height(env) |> float_of_int;
   let pos = {Geom.x: 100., y: bottom -. 100.};
@@ -428,9 +454,10 @@ let draw = (state, context, env) => {
   drawWorld(state, context, env);
   Draw.popMatrix(env);
 
-  Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=50), env);
+  /* Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=50), env); */
   touchButtons(env) |> List.iter(((action, shape)) => {
-    GeomDraw.circle(shape, env);
+    drawControl(action, shape.Geom.Circle.center, env);
+    /* GeomDraw.circle(shape, env); */
   });
   /* GeomDraw.circle(joystickCircle(env), env); */
 

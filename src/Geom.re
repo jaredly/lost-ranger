@@ -73,6 +73,11 @@ let limitVector = ({magnitude, theta}, maxM) => {theta, magnitude: min(maxM, max
 let addPoints = (p1, p2) => {x: p1.x +. p2.x, y: p1.y +. p2.y};
 let addPectorToPoint = ({dx, dy}, {x, y}) => {x: x +. dx, y: y +. dy};
 
+let flipX = ({x, y}) => {x: -.x, y};
+let flipY = ({x, y}) => {x, y: -.y};
+let invertPoint = ({x, y}) => {x: -.x, y: -.y};
+let flipXY = ({x, y}) => {x: y, y: x};
+
 let lerpPos = (p1, p2, amount) => {
   let dx = p2.x -. p1.x;
   let dy = p2.y -. p1.y;
