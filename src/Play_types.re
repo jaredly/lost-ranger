@@ -89,7 +89,7 @@ type player = {
   isOnGround: bool,
   walkTimer: float,
   inventory: Inventory.t,
-  throw: option((Geom.point, Geom.vector, Stone.t)),
+  throw: option((Geom.point, Geom.vector, Stone.t, float)),
   skin: int,
 };
 

@@ -10,6 +10,12 @@ let pithyTexts = [
   "Many thanks to kenney.nl for the assets"
 ];
 
+let joystickCircle = env => {
+  let bottom = Reprocessing.Env.height(env) |> float_of_int;
+  let pos = {Geom.x: 100., y: bottom -. 100.};
+  {Geom.Circle.center: pos, rad: 100.}
+};
+
 let textColor = Constants.black;
 
 let gameWidthInt = 120;
@@ -261,7 +267,7 @@ let drawPlayer = (state, context, env) => {
   let bob = state.player.isOnGround ? bob : 0.;
   Draw.translate(~x=0., ~y=bob *. 2., env);
   let rot = switch state.player.throw {
-  | Some((_, v, stone)) when v.Geom.magnitude > 5. => Draw.rotate(((
+  | Some((_, v, stone, _)) when v.Geom.magnitude > 5. => Draw.rotate(((
     state.player.facingLeft ? v.Geom.theta /. 2. +. (v.Geom.theta < 0. ? Geom.halfPi : -. Geom.halfPi)
     : v.Geom.theta /. 2.
   )), env)
@@ -279,7 +285,7 @@ let drawPlayer = (state, context, env) => {
   let faceRot = state.player.facingLeft ? walk2/.2. : walk/.2.;
   let rot = switch state.player.throw {
   | None => faceRot
-  | Some((_, v, stone)) => {
+  | Some((_, v, stone, _)) => {
     if (v.Geom.magnitude > 5.) {
       let percent = v.Geom.magnitude /. 200.;
       let extra = Geom.halfPi /. 2. *. percent;
@@ -296,7 +302,7 @@ let drawPlayer = (state, context, env) => {
 
   switch state.player.throw {
   | None => ()
-  | Some((_, v, stone)) => {
+  | Some((_, v, stone, _)) => {
     drawStone(context, {Geom.x: 0., y: PlayerSprite.arm_height *. spriteScale}, stone, env)
   }
   };
@@ -305,7 +311,7 @@ let drawPlayer = (state, context, env) => {
 
 };
 
-let draw = (state, context, env) => {
+let drawWorld = (state, context, env) => {
   Draw.background(Utils.color(~r=200, ~g=230, ~b=255, ~a=255), env);
   /* Draw.background(Constants.white, env); */
 
@@ -404,3 +410,27 @@ let draw = (state, context, env) => {
   });
 
 };
+
+let draw = (state, context, env) => {
+  Draw.pushMatrix(env);
+  drawWorld(state, context, env);
+  Draw.popMatrix(env);
+
+  Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=50), env);
+  GeomDraw.circle(joystickCircle(env), env);
+
+  Reprocessing.Draw.tint(textColor, env);
+  Reprocessing.Draw.text(~font=context.textFont, ~body=Printf.sprintf("Throw rocks"), ~pos=(10, 10), env);
+  let rocks = List.length(state.Play_types.stones);
+  Reprocessing.Draw.text(~font=context.smallFont, ~body=Printf.sprintf("%d %s thrown", rocks, rocks == 1 ? "rock" : "rocks"), ~pos=(10, 40), env);
+
+  Reprocessing.Draw.text(~font=context.smallFont, ~body="by Jared Forsyth", ~pos=(10, int_of_float(context.height) - 60), env);
+  Reprocessing.Draw.text(~font=context.smallFont, ~body="Made with ReasonML and Reprocessing", ~pos=(10, int_of_float(context.height) - 30), env);
+
+
+  let w = int_of_float(context.width);
+  /* Reprocessing.Draw.text(~font=context.smallFont, ~body="Tap & drag to throw a rock", ~pos=(w - 250, 10), env);
+  Reprocessing.Draw.text(~font=context.smallFont, ~body="Space to change character", ~pos=(w - 250, 30), env); */
+
+  Reprocessing.Draw.noTint(env);
+}

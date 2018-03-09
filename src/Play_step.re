@@ -191,6 +191,52 @@ let getUserInput = (prev, env) => Reprocessing.({
   action: false,
 });
 
+let joystickButton = (pos, env) => {
+  let circle = Play_draw.joystickCircle(env);
+  if (Geom.Circle.testPoint(circle, pos)) {
+    /* let angle = Geom.angleTo(circle.Geom.Circle.center, pos) |> Geom.normalize; */
+    let pector = Geom.pdiff(circle.Geom.Circle.center, pos);
+    if (pector.dy < 0. && -.pector.dy > abs_float(pector.dx)) {
+      Some(`Jump)
+    } else if (pector.dx > 0.) {
+    /* if (Geom.isThetaBetween(-.Geom.halfPi, Geom.halfPi, angle)) { */
+      Some(`Right)
+    } else {
+      Some(`Left)
+    }
+  } else {
+    None
+  }
+};
+
+let getTouchInput = (state, env) => {
+  let throwId = switch state.player.throw {
+  | None => None
+  | Some((_, _, _, id)) => Some(id)
+  };
+  Hashtbl.fold((key, pos, input) => {
+    if (Some(key) == throwId) {
+      input /* skip this one */
+    } else {
+      switch (joystickButton(Geom.fromTuple(pos), env)) {
+      | Some(`Left) => {...input, left: true}
+      | Some(`Right) => {...input, right: true}
+      | Some(`Jump) => {...input, jump: true}
+      | _ => input
+      }
+    }
+  }, Reprocessing.Env.touches(env), {
+    left: false, right: false, jump: false, action: false,
+  })
+};
+
+let mergeInputs = (one, two) => {
+  left: one.left || two.left,
+  right: one.right || two.right,
+  jump: one.jump || two.jump,
+  action: one.action || two.action
+};
+
 let collisionPairs = (items, test) => {
   let rec loop = (items) => {
     switch items {
@@ -302,53 +348,16 @@ let collideStones = stones => {
 };
 
 let step = (state, context, env) => {
-  let userInput = getUserInput(state.userInput, env);
+  let userInput = mergeInputs(getUserInput(state.userInput, env), getTouchInput(state, env));
 
   let stones = collideStones(state.stones);
   let stones = moveStones(stones, state.blocks);
   let player = state.player;
-  let (stones, player) =
+  /* let (stones, player) =
 
   Reprocessing.(if (Env.mousePressed(env)) {
-    let pos = Geom.fromIntTuple(Env.mouse(env));
-    (stones, {...player, throw: switch player.throw {
-    | None => Some((pos, Geom.v0, {
-        let size = Random.float(10.) +. 5.;
-        {Stone.vel: Geom.v0, circle: {Geom.Circle.rad: size, center: {Geom.x: 0., y: 0.}},
-          rotation: Random.float(Geom.tau),
-        }
-      }))
-    | Some((p1, p2, item)) => {
-      /* let vec =  */
-      Some((p1, Geom.pectorToVector(Geom.pdiff(pos, p1)) |> x => Geom.limitVector(x, 200.), item))
-    }
-    }})
   } else {
-    switch state.player.throw {
-    | None => (stones, player)
-    | Some((p1, vec, {Stone.circle: {rad}, rotation} as stone)) => {
-      let vel = Geom.limitVector(Geom.scaleVector(vec, 0.1), 25. -. rad);
-      let pos = Play_draw.rockPos(state, vec, stone);
-      let circle = Geom.Circle.{center: pos, rad: rad};
-      let circle = {
-        let center = circle.Geom.Circle.center;
-        let notFree = Play_collide.blockCollision(center, Play_collide.testCircle(circle, Geom.p0), state.blocks);
-        if (notFree) {
-          Geom.Circle.{...circle, center: Geom.addPoints(state.player.box.pos, {Geom.x: 0., y: -40.})}
-        } else {
-          circle
-        }
-      };
-      ([{
-        Stone.vel: Geom.addVectors(vel, state.player.vel),
-        circle,
-        rotation,
-        }, ...stones], {...player,
-        throw: None,
-        vel: Geom.addVectors(player.vel, Geom.scaleVector(vel, -0.01 *. rad))})
-      }
-    }
-  });
+  }); */
 
 
   /* let player */
@@ -356,7 +365,7 @@ let step = (state, context, env) => {
   let inputLeft = userInput.left ? true : (userInput.right ? false : player.facingLeft);
   let facingLeft = switch player.throw {
   | None => inputLeft
-  | Some((_, v, _)) => v.Geom.magnitude > 5. ? Geom.vx(v) < 0. : inputLeft
+  | Some((_, v, _, _)) => v.Geom.magnitude > 5. ? Geom.vx(v) < 0. : inputLeft
   };
   let walkTimer = (userInput.left || userInput.right ? player.walkTimer +. Reprocessing.Env.deltaTime(env) : 0.);
   let (camera, player) = followPlayer(player, state.camera, gameWidth);
@@ -373,4 +382,81 @@ let step = (state, context, env) => {
     camera,
     player: {...player, facingLeft, walkTimer}
   }
+};
+
+let touchStart = (state, ctx, env) => {
+  List.fold_left((state, (id, x, y)) => {
+    let pos = {Geom.x, y};
+    switch state.player.throw {
+    | Some(_) => state
+    | None => {
+      switch (joystickButton(pos, env)) {
+      | Some(_) => state
+      | None => {
+
+        let throw = Some((pos, Geom.v0, {
+          let size = Random.float(10.) +. 5.;
+          {Stone.vel: Geom.v0, circle: {Geom.Circle.rad: size, center: {Geom.x: 0., y: 0.}},
+            rotation: Random.float(Geom.tau),
+          }
+        }, id));
+
+        {...state, player: {...state.player, throw}}
+      }
+      }
+    }
+    }
+  }, state, Reprocessing.Env.changedTouches(env))
+};
+
+let touchMove = (state, ctx, env) => {
+  switch (state.player.throw) {
+  | None => state
+  | Some((p1, vec, item, touch)) => {
+    switch (List.find(((id, x, y)) => id == touch, Reprocessing.Env.changedTouches(env))) {
+    | exception Not_found => state
+    | (id, x, y) => {
+
+      let pos = Geom.fromTuple((x, y));
+      {...state, player: {...state.player, throw: Some((p1, Geom.pectorToVector(Geom.pdiff(pos, p1)) |> x => Geom.limitVector(x, 200.), item, id))}}
+    }
+    }
+  }
+  }
+};
+
+let touchEnd = (state, ctx, env) => {
+  switch state.player.throw {
+  | None => state
+  | Some((p1, vec, {Stone.circle: {rad}, rotation} as stone, touch)) => {
+    switch (List.find(((id, x, y)) => id == touch, Reprocessing.Env.changedTouches(env))) {
+    | exception Not_found => state
+    | (id, x, y) => {
+
+      let vel = Geom.limitVector(Geom.scaleVector(vec, 0.1), 25. -. rad);
+      let pos = Play_draw.rockPos(state, vec, stone);
+      let circle = Geom.Circle.{center: pos, rad: rad};
+      let circle = {
+        let center = circle.Geom.Circle.center;
+        let notFree = Play_collide.blockCollision(center, Play_collide.testCircle(circle, Geom.p0), state.blocks);
+        if (notFree) {
+          Geom.Circle.{...circle, center: Geom.addPoints(state.player.box.pos, {Geom.x: 0., y: -40.})}
+        } else {
+          circle
+        }
+      };
+      let stones = [{
+        Stone.vel: Geom.addVectors(vel, state.player.vel),
+        circle,
+        rotation,
+        }, ...state.stones];
+      let player = {...state.player,
+        throw: None,
+        vel: Geom.addVectors(state.player.vel, Geom.scaleVector(vel, -0.01 *. rad))};
+
+      {...state, player, stones}
+
+    }
+  };
+}};
 };

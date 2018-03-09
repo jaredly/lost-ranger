@@ -59,6 +59,11 @@ let draw = ({Shared.screenState, context}, env) => {
   {screenState, context}
 };
 
+let run = (fn, {Shared.screenState, context}, env) => {
+  let screenState = fn(screenState, context, env);
+  {Shared.screenState, context}
+};
+
 let run = (assetDir, _) => Reprocessing.run(
   ~setup=setup(assetDir),
   ~title="Throw Rocks",
@@ -66,10 +71,9 @@ let run = (assetDir, _) => Reprocessing.run(
     print_endline("mouse");
     state
   },
-  ~touchStart=(state, env) => {
-    print_endline("touch");
-    state
-  },
+  ~touchStart=run(FreePlay.touchStart),
+  ~touchMove=run(FreePlay.touchMove),
+  ~touchEnd=run(FreePlay.touchEnd),
   ~draw,
   ()
 );
