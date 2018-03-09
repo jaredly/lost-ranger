@@ -61,10 +61,13 @@ let start = (env) => {
     loop(Play_draw.pithyTexts |> List.rev, textPositions^)
   };
 
+  let box = Play_draw.spriteBox({Geom.x: 0., y: 0.}, 0, 0.);
+  let playerPos = {Geom.y: float_of_int(ground) *. blockSize -. box.Geom.Rect.hh, x: blockSize};
   let player = {
     vel: Geom.v0,
     throw: None,
-    box: Geom.Rect.create({Geom.y: float_of_int(ground) *. blockSize -. blockSize *. 0.7, x: blockSize}, blockSize *. 0.7, blockSize *. 1.4),
+    /* box: Geom.Rect.create(playerPos, blockSize *. 0.7, blockSize *. 1.4), */
+    box: {...box, Geom.Rect.pos: playerPos},
     throwSkill: 0.,
     skin: 0,
     isOnGround: false,
@@ -357,11 +360,17 @@ let step = (state, context, env) => {
   };
   let walkTimer = (userInput.left || userInput.right ? player.walkTimer +. Reprocessing.Env.deltaTime(env) : 0.);
   let (camera, player) = followPlayer(player, state.camera, gameWidth);
+  let player = if (Reprocessing.Env.keyPressed(Reprocessing.Events.Space, env)) {
+    let skin = player.skin + 1;
+    {...player, skin, box: Play_draw.spriteBox(player.box.pos, skin, player.box.height)};
+  } else {
+    player
+  };
   {
     ...state,
     userInput,
     stones,
     camera,
-    player: {...player, facingLeft, walkTimer, skin: (Reprocessing.Env.keyPressed(Reprocessing.Events.Space, env) ? player.skin + 1 : player.skin)}
+    player: {...player, facingLeft, walkTimer}
   }
 };

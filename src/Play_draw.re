@@ -38,6 +38,8 @@ let module PlayerSprites = {
   let module Male = {
     let top = 0.;
     let head_off = 0.;
+    let height = 56.;
+    let width = 28.;
     let leg = Players.male_leg;
     let arm = Players.male_arm;
     let head = Players.male_head;
@@ -55,6 +57,8 @@ let module PlayerSprites = {
   let module Female = {
     let top = 0.;
     let head_off = 0.;
+    let height = 56.;
+    let width = 28.;
     let leg = Players.female_leg;
     let arm = Players.female_arm;
     let head = Players.female_head;
@@ -72,6 +76,8 @@ let module PlayerSprites = {
   let module Skeleton = {
     let top = 0.;
     let head_off = 0.;
+    let height = 56.;
+    let width = 28.;
     let leg = Players.skeleton_leg;
     let arm = Players.skeleton_arm;
     let head = Players.skeleton_head;
@@ -89,6 +95,8 @@ let module PlayerSprites = {
   let module Zombie = {
     let top = 0.;
     let head_off = 0.;
+    let height = 56.;
+    let width = 28.;
     let leg = Players.zombie_leg;
     let arm = Players.zombie_arm;
     let head = Players.zombie_head;
@@ -104,8 +112,10 @@ let module PlayerSprites = {
   };
 
   let module Alien = {
-    let top = 10.;
+    let top = 0.;
     let head_off = 1.;
+    let height = 36.;
+    let width = 14.;
     let leg = Players.alien_leg;
     let arm = Players.alien_arm;
     let head = Players.alien_head;
@@ -121,8 +131,10 @@ let module PlayerSprites = {
   };
 
   let module Gnome = {
-    let top = 13.;
+    let top = 0.;
     let head_off = 10.;
+    let height = 32.;
+    let width = 14.;
     let leg = Players.gnome_leg;
     let arm = Players.gnome_arm;
     let head = Players.gnome_head;
@@ -141,6 +153,8 @@ let module PlayerSprites = {
   module type Sprite = {
     let top: float;
     let head_off: float;
+    let height: float;
+    let width: float;
     let leg: sprite;
     let arm: sprite;
     let head: sprite;
@@ -169,6 +183,13 @@ let module PlayerSprites = {
   /* let  */
 };
 
+let spriteScale = 0.4;
+
+let spriteBox = (pos, skin, prevHeight) => {
+  let module PlayerSprite = (val PlayerSprites.getNum(skin): PlayerSprites.Sprite);
+  Geom.Rect.create(Geom.addPoints(pos, {Geom.x: 0., y: prevHeight /. 2. -.PlayerSprite.height /. 2.}), PlayerSprite.width, PlayerSprite.height)
+};
+
 let rockPos = (state, v, env) => {
   let module PlayerSprite = (val PlayerSprites.getNum(state.player.skin): PlayerSprites.Sprite);
 
@@ -183,9 +204,9 @@ let rockPos = (state, v, env) => {
   let y = y -. 10.;
 
   let loff = state.player.facingLeft ? 1. : -1.;
-  let armTop = y -. PlayerSprite.body_height *. 0.2 +. 10.;
+  let armTop = y -. PlayerSprite.body_height *. spriteScale /. 2. +. 10.;
   let arm = {Geom.x: x +. shoulder *. loff *. -1., y: armTop};
-  let relativeToArm = {Geom.theta: angle +. Geom.halfPi, magnitude: PlayerSprite.arm_height *. 0.4};
+  let relativeToArm = {Geom.theta: angle +. Geom.halfPi, magnitude: PlayerSprite.arm_height *. spriteScale};
 
   Geom.addVectorToPoint(relativeToArm, arm);
 };
@@ -210,32 +231,32 @@ let drawPlayer = (state, context, env) => {
     (Geom.halfPi *. amp /. 2., -. Geom.halfPi *. amp /. 2.)
   };
   Draw.pushMatrix(env);
-  Draw.translate(~x, ~y=y +. PlayerSprite.body_height *. 0.2 +. 5., env);
+  Draw.translate(~x, ~y=y +. PlayerSprite.body_height *. spriteScale /. 2. +. 5., env);
   Draw.rotate(walk, env);
-  PlayerSprite.leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.PlayerSprite.leg_width *. 0.2, 0.), ~flip=false, env);
+  PlayerSprite.leg(context.Shared.charSheet, ~scale=spriteScale, ~pos=(-.PlayerSprite.leg_width *. spriteScale /. 2., 0.), ~flip=false, env);
   Draw.rotate(-.walk +. walk2, env);
-  PlayerSprite.leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.PlayerSprite.leg_width *. 0.2, 0.), ~flip=false, env);
+  PlayerSprite.leg(context.Shared.charSheet, ~scale=spriteScale, ~pos=(-.PlayerSprite.leg_width *. spriteScale /. 2., 0.), ~flip=false, env);
   Draw.popMatrix(env);
 
 
   /* arm behind */
   let loff = state.player.facingLeft ? 1. : -1.;
-  let armTop = y -. PlayerSprite.body_height *. 0.2 +. 10.;
+  let armTop = y -. PlayerSprite.body_height *. spriteScale /. 2. +. 10.;
   Draw.pushMatrix(env);
   Draw.translate(~x=x +. shoulder *. loff, ~y=armTop, env);
   Draw.rotate(state.player.facingLeft ? walk/.2. : walk2/.2., env);
-  PlayerSprite.arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.PlayerSprite.arm_width *. 0.2, 0.), ~flip=false, env);
+  PlayerSprite.arm(context.Shared.charSheet, ~scale=spriteScale, ~pos=(-.PlayerSprite.arm_width *. spriteScale /. 2., 0.), ~flip=false, env);
   Draw.popMatrix(env);
 
 
 
   /* body */
-  PlayerSprite.body(context.Shared.charSheet, ~scale=0.4, ~flip=!state.player.facingLeft,
-  ~pos=(x -. PlayerSprite.body_width *. 0.2, y -. PlayerSprite.body_height *. 0.2 +. 5.), env);
+  PlayerSprite.body(context.Shared.charSheet, ~scale=spriteScale, ~flip=!state.player.facingLeft,
+  ~pos=(x -. PlayerSprite.body_width *. spriteScale /. 2., y -. PlayerSprite.body_height *. spriteScale /. 2. +. 5.), env);
 
   /* Head! */
   Draw.pushMatrix(env);
-  Draw.translate(~x=x, ~y=y -. PlayerSprite.head_height *. 0.1 -. 5. +. PlayerSprite.head_off, env);
+  Draw.translate(~x=x, ~y=y -. PlayerSprite.head_height *. spriteScale /. 4. -. 5. +. PlayerSprite.head_off, env);
   let bob = sin(state.player.walkTimer *. 20.) *. amp;
   let bob = state.player.isOnGround ? bob : 0.;
   Draw.translate(~x=0., ~y=bob *. 2., env);
@@ -247,10 +268,10 @@ let drawPlayer = (state, context, env) => {
   | _ => ()
   };
   /* Draw.rotate(state.player.facingLeft ? walk : -. walk, env); */
-  PlayerSprite.head(context.Shared.charSheet, ~scale=0.4, ~flip=!state.player.facingLeft,
+  PlayerSprite.head(context.Shared.charSheet, ~scale=spriteScale, ~flip=!state.player.facingLeft,
   ~pos=(
-    -. (state.player.facingLeft ? PlayerSprite.head_rx : PlayerSprite.head_width -. PlayerSprite.head_rx) *. 0.4,
-    -. PlayerSprite.head_height *. 0.3
+    -. (state.player.facingLeft ? PlayerSprite.head_rx : PlayerSprite.head_width -. PlayerSprite.head_rx) *. spriteScale,
+    -. PlayerSprite.head_height *. spriteScale /. 4. *. 3.
   ), env);
   Draw.popMatrix(env);
 
@@ -271,12 +292,12 @@ let drawPlayer = (state, context, env) => {
   Draw.pushMatrix(env);
   Draw.translate(~x=x +. shoulder *. loff *. -1., ~y=armTop, env);
   Draw.rotate(rot, env);
-  PlayerSprite.arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.PlayerSprite.arm_width *. 0.2, 0.), ~flip=false, env);
+  PlayerSprite.arm(context.Shared.charSheet, ~scale=spriteScale, ~pos=(-.PlayerSprite.arm_width *. spriteScale /. 2., 0.), ~flip=false, env);
 
   switch state.player.throw {
   | None => ()
   | Some((_, v, stone)) => {
-    drawStone(context, {Geom.x: 0., y: PlayerSprite.arm_height *. 0.4}, stone, env)
+    drawStone(context, {Geom.x: 0., y: PlayerSprite.arm_height *. spriteScale}, stone, env)
   }
   };
 
