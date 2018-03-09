@@ -1,11 +1,15 @@
-# Purple Maze
+# Lost Ranger
 
-![screencast](./screencast.gif)
+Inspired by:
+- "Lost Miner" android game
+- "It Lurks Below"
 
-It's a maze game, written in Reason.
-Planning to target mobile, web, and native desktop.
-
-I'll probably spin out a couple of the parts into standalone libraries (`Geom.re` in particular).
+You're a ranger because you mostly/only have ranged weapons.
+At the start, you can pick up & throw rocks.
+Then you can make a sling.
+Then you make a bow & arrows.
+There will be hunting, and potentially self-defence from wild animals.
+And mining too.
 
 ## License
 
