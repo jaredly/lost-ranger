@@ -126,41 +126,6 @@ let wrapX = (x, gameWidth) => x < 0. ? gameWidth +. x : (x > gameWidth ? x -. ga
 
 let wrap = ({Geom.x, y}, gameWidth) => {Geom.x: wrapX(x, gameWidth), y};
 
-/* let ensureStoneIsFree = (circle, vel, blocks) => {
-  let center = circle.Geom.Circle.center;
-  let notFree = Play_collide.blockCollision(center, Play_collide.testCircle(circle, Geom.p0), blocks);
-  if (notFree) {
-    let rec loop = (circle, i) => {
-      let notFree = Play_collide.blockCollision(center, Play_collide.testCircle(circle, Geom.p0), blocks);
-      if (notFree && i < 10) {
-
-        let fake = Geom.invertVector(vel);
-        let (_, push) = MoveStone.moveObject(
-          Geom.addVectorToPoint(vel, center),
-          /* center, */
-          fake,
-          /* Geom.v0, */
-          Geom.v0,
-          false,
-          Play_collide.testCircle(circle),
-          Play_collide.collideCircle(circle),
-          blocks
-        );
-        let push = Geom.addVectors(vel, push);
-
-        Printf.printf("Push: %0.2f %0.2f", push.Geom.theta, push.Geom.magnitude);
-        print_newline();
-        loop(Geom.Circle.push(circle, push), i + 1)
-      } else {
-        circle
-      }
-    };
-    loop(circle, 0)
-  } else {
-    circle
-  }
-}; */
-
 let moveStone = (stone, otherStones, blocks) => {
   open! Stone;
   let (_, vel) = MoveStone.moveObject(
@@ -172,7 +137,6 @@ let moveStone = (stone, otherStones, blocks) => {
     Play_collide.collideCircle(stone.circle),
     blocks
   );
-  /* print_endline(string_of_float(vel.Geom.magnitude)); */
   {vel, rotation: stone.rotation, circle: {...stone.circle, center: wrap(Geom.addVectorToPoint(vel, stone.circle.center), gameWidth)}}
 };
 
@@ -192,12 +156,28 @@ let getUserInput = (prev, env) => Reprocessing.({
 });
 
 let joystickButton = (pos, env) => {
-  let circle = Play_draw.joystickCircle(env);
+  Play_draw.touchButtons(env) |> List.fold_left((result, (action, shape) ) => {
+    switch result {
+    | Some(x) => result
+    | None => {
+      if (Geom.Circle.testPoint(shape, pos)) {
+        Some(action)
+      } else {
+        None
+      }
+    }
+    }
+  }, None);
+  /* let circle = Play_draw.joystickCircle(env);
   if (Geom.Circle.testPoint(circle, pos)) {
     /* let angle = Geom.angleTo(circle.Geom.Circle.center, pos) |> Geom.normalize; */
     let pector = Geom.pdiff(circle.Geom.Circle.center, pos);
     if (pector.dy < 0. && -.pector.dy > abs_float(pector.dx)) {
-      Some(`Jump)
+      if (-.pector.dy > 2. *. abs_float(pector.dx)) {
+        Some(`Jump)
+      } else {
+        Some(pector.dx > 0. ? `JumpRight : `JumpLeft)
+      }
     } else if (pector.dx > 0.) {
     /* if (Geom.isThetaBetween(-.Geom.halfPi, Geom.halfPi, angle)) { */
       Some(`Right)
@@ -206,7 +186,7 @@ let joystickButton = (pos, env) => {
     }
   } else {
     None
-  }
+  } */
 };
 
 let getTouchInput = (state, env) => {
@@ -222,6 +202,8 @@ let getTouchInput = (state, env) => {
       | Some(`Left) => {...input, left: true}
       | Some(`Right) => {...input, right: true}
       | Some(`Jump) => {...input, jump: true}
+      | Some(`JumpLeft) => {...input, jump: true, left: true}
+      | Some(`JumpRight) => {...input, jump: true, right: true}
       | _ => input
       }
     }
@@ -353,14 +335,7 @@ let step = (state, context, env) => {
   let stones = collideStones(state.stones);
   let stones = moveStones(stones, state.blocks);
   let player = state.player;
-  /* let (stones, player) =
 
-  Reprocessing.(if (Env.mousePressed(env)) {
-  } else {
-  }); */
-
-
-  /* let player */
   let player = movePlayer(userInput, player, state.blocks);
   let inputLeft = userInput.left ? true : (userInput.right ? false : player.facingLeft);
   let facingLeft = switch player.throw {

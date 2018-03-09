@@ -10,12 +10,6 @@ let pithyTexts = [
   "Many thanks to kenney.nl for the assets"
 ];
 
-let joystickCircle = env => {
-  let bottom = Reprocessing.Env.height(env) |> float_of_int;
-  let pos = {Geom.x: 100., y: bottom -. 100.};
-  {Geom.Circle.center: pos, rad: 100.}
-};
-
 let textColor = Constants.black;
 
 let gameWidthInt = 120;
@@ -411,13 +405,34 @@ let drawWorld = (state, context, env) => {
 
 };
 
+let touchButtons = env => {
+  let bottom = Reprocessing.Env.height(env) |> float_of_int;
+  let right = Reprocessing.Env.width(env) |> float_of_int;
+  let buttonSize = 50.;
+  let shape = pos => {Geom.Circle.center: pos, rad: buttonSize};
+  [
+    (`Left, shape({Geom.x: 75., y: bottom -. 75.})),
+    (`Right, shape({Geom.x: 175., y: bottom -. 75.})),
+    (`Jump, shape({Geom.x: right -. 75., y: bottom -. 75.})),
+  ]
+};
+
+let joystickCircle = env => {
+  let bottom = Reprocessing.Env.height(env) |> float_of_int;
+  let pos = {Geom.x: 100., y: bottom -. 100.};
+  {Geom.Circle.center: pos, rad: 100.}
+};
+
 let draw = (state, context, env) => {
   Draw.pushMatrix(env);
   drawWorld(state, context, env);
   Draw.popMatrix(env);
 
   Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=50), env);
-  GeomDraw.circle(joystickCircle(env), env);
+  touchButtons(env) |> List.iter(((action, shape)) => {
+    GeomDraw.circle(shape, env);
+  });
+  /* GeomDraw.circle(joystickCircle(env), env); */
 
   Reprocessing.Draw.tint(textColor, env);
   Reprocessing.Draw.text(~font=context.textFont, ~body=Printf.sprintf("Throw rocks"), ~pos=(10, 10), env);
