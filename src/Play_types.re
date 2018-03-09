@@ -90,6 +90,7 @@ type player = {
   walkTimer: float,
   inventory: Inventory.t,
   throw: option((Geom.point, Geom.vector, Stone.t)),
+  skin: int,
 };
 
 type userInput = {

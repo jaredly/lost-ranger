@@ -32,7 +32,146 @@ let drawStone = (context, pos, stone, env) => {
 
 let shoulder = -4.;
 
+
+let module PlayerSprites = {
+  let module Players = Play_assets.Players;
+  let module Male = {
+    let top = 0.;
+    let head_off = 0.;
+    let leg = Players.male_leg;
+    let arm = Players.male_arm;
+    let head = Players.male_head;
+    let body = Players.male_body;
+    let head_width = Players.male_head_width;
+    let head_rx = Players.male_head_width /. 2.;
+    let head_height = Players.male_head_height;
+    let body_height = Players.skeleton_body_height;
+    let arm_height = Players.skeleton_arm_height;
+    let arm_width = Players.skeleton_arm_width;
+    let leg_width = Players.skeleton_leg_width;
+    let body_width = Players.skeleton_body_width;
+  };
+
+  let module Female = {
+    let top = 0.;
+    let head_off = 0.;
+    let leg = Players.female_leg;
+    let arm = Players.female_arm;
+    let head = Players.female_head;
+    let body = Players.female_body;
+    let head_width = Players.female_head_width;
+    let head_rx = Players.male_head_width /. 2.;
+    let head_height = Players.male_head_height;
+    let body_height = Players.skeleton_body_height;
+    let arm_height = Players.skeleton_arm_height;
+    let arm_width = Players.skeleton_arm_width;
+    let leg_width = Players.skeleton_leg_width;
+    let body_width = Players.skeleton_body_width;
+  };
+
+  let module Skeleton = {
+    let top = 0.;
+    let head_off = 0.;
+    let leg = Players.skeleton_leg;
+    let arm = Players.skeleton_arm;
+    let head = Players.skeleton_head;
+    let body = Players.skeleton_body;
+    let head_width = Players.skeleton_head_width;
+    let head_rx = Players.male_head_width /. 2.;
+    let head_height = Players.skeleton_head_height;
+    let body_height = Players.skeleton_body_height;
+    let arm_height = Players.skeleton_arm_height;
+    let arm_width = Players.skeleton_arm_width;
+    let leg_width = Players.skeleton_leg_width;
+    let body_width = Players.skeleton_body_width;
+  };
+
+  let module Zombie = {
+    let top = 0.;
+    let head_off = 0.;
+    let leg = Players.zombie_leg;
+    let arm = Players.zombie_arm;
+    let head = Players.zombie_head;
+    let body = Players.zombie_body;
+    let head_width = Players.zombie_head_width;
+    let head_rx = Players.male_head_width /. 2.;
+    let head_height = Players.zombie_head_height;
+    let body_height = Players.skeleton_body_height;
+    let arm_height = Players.skeleton_arm_height;
+    let arm_width = Players.skeleton_arm_width;
+    let leg_width = Players.skeleton_leg_width;
+    let body_width = Players.skeleton_body_width;
+  };
+
+  let module Alien = {
+    let top = 10.;
+    let head_off = 1.;
+    let leg = Players.alien_leg;
+    let arm = Players.alien_arm;
+    let head = Players.alien_head;
+    let body = Players.alien_body;
+    let head_width = Players.alien_head_width;
+    let head_rx = Players.alien_head_width /. 2.;
+    let head_height = Players.alien_head_height;
+    let body_height = Players.alien_body_height;
+    let arm_height = Players.alien_arm_height;
+    let arm_width = Players.alien_arm_width;
+    let leg_width = Players.alien_leg_width;
+    let body_width = Players.alien_body_width;
+  };
+
+  let module Gnome = {
+    let top = 13.;
+    let head_off = 10.;
+    let leg = Players.gnome_leg;
+    let arm = Players.gnome_arm;
+    let head = Players.gnome_head;
+    let body = Players.gnome_body;
+    let head_width = Players.gnome_head_width;
+    let head_rx = Players.gnome_head_width /. 2.;
+    let head_height = Players.gnome_head_height;
+    let body_height = Players.gnome_body_height;
+    let body_width = Players.gnome_body_width;
+    let arm_height = Players.gnome_arm_height;
+    let arm_width = Players.gnome_arm_width;
+    let leg_width = Players.gnome_leg_width;
+  };
+
+  open Play_assets;
+  module type Sprite = {
+    let top: float;
+    let head_off: float;
+    let leg: sprite;
+    let arm: sprite;
+    let head: sprite;
+    let body: sprite;
+    let head_width: float;
+    let head_rx: float;
+    let head_height: float;
+    let body_height: float;
+    let body_width: float;
+    let arm_height: float;
+    let arm_width: float;
+    let leg_width: float;
+  };
+
+  let get = which => switch which {
+  | `Male => (module Male: Sprite)
+  | `Female => (module Female: Sprite)
+  | `Zombie => (module Zombie: Sprite)
+  | `Skeleton => (module Skeleton: Sprite)
+  | `Gnome => (module Gnome: Sprite)
+  | `Alien => (module Alien: Sprite)
+  };
+
+  let options = [|`Female, `Male, `Zombie, `Skeleton, `Gnome, `Alien|];
+  let getNum = num => get(options[num mod Array.length(options)]);
+  /* let  */
+};
+
 let rockPos = (state, v, env) => {
+  let module PlayerSprite = (val PlayerSprites.getNum(state.player.skin): PlayerSprites.Sprite);
+
   let angle = if (v.Geom.magnitude > 5.) {
     let percent = v.Geom.magnitude /. 200.;
     let extra = Geom.halfPi /. 2. *. percent;
@@ -44,81 +183,22 @@ let rockPos = (state, v, env) => {
   let y = y -. 10.;
 
   let loff = state.player.facingLeft ? 1. : -1.;
-  let armTop = y -. Play_assets.Players.male_body_height *. 0.2 +. 10.;
+  let armTop = y -. PlayerSprite.body_height *. 0.2 +. 10.;
   let arm = {Geom.x: x +. shoulder *. loff *. -1., y: armTop};
-  let relativeToArm = {Geom.theta: angle +. Geom.halfPi, magnitude: Play_assets.Players.male_arm_height *. 0.4};
+  let relativeToArm = {Geom.theta: angle +. Geom.halfPi, magnitude: PlayerSprite.arm_height *. 0.4};
 
   Geom.addVectorToPoint(relativeToArm, arm);
 };
 
-
-let module PlayerSprite = {
-  let module Players = Play_assets.Players;
-  let module Male = {
-
-    let leg = Players.male_leg;
-    let arm = Players.male_arm;
-    let head = Players.male_head;
-    let body = Players.male_body;
-  };
-
-  let module Female = {
-    let leg = Players.female_leg;
-    let arm = Players.female_arm;
-    let head = Players.female_head;
-    let body = Players.female_body;
-    let head_width = Players.female_head_width;
-    let head_height = Players.female_head_height;
-  };
-
-  let module Skeleton = {
-    let leg = Players.skeleton_leg;
-    let arm = Players.skeleton_arm;
-    let head = Players.skeleton_head;
-    let body = Players.skeleton_body;
-    let head_width = Players.skeleton_head_width;
-    let head_height = Players.skeleton_head_height;
-  };
-
-  let module Zombie = {
-    let leg = Players.zombie_leg;
-    let arm = Players.zombie_arm;
-    let head = Players.zombie_head;
-    let body = Players.zombie_body;
-    let head_width = Players.zombie_head_width;
-    let head_height = Players.zombie_head_height;
-  };
-
-  let module Alien = {
-    let leg = Players.alien_leg;
-    let arm = Players.alien_arm;
-    let head = Players.alien_head;
-    let body = Players.alien_body;
-    let head_width = Players.alien_head_width;
-    let head_height = Players.alien_head_height;
-  };
-
-  let module Gnome = {
-    let leg = Players.gnome_leg;
-    let arm = Players.gnome_arm;
-    let head = Players.gnome_head;
-    let body = Players.gnome_body;
-    let head_width = Players.gnome_head_width;
-    let head_height = Players.gnome_head_height;
-  };
-
-  include Zombie;
-  /* let  */
-};
 
 let drawPlayer = (state, context, env) => {
   /* Draw.fill(Constants.green, env); */
   /* GeomDraw.rect(state.player.box, env); */
 
   let (x, y) = Geom.tuple(state.player.box.pos);
-  let y = y -. 10.;
 
-  let module Players = Play_assets.Players;
+  let module PlayerSprite = (val PlayerSprites.getNum(state.player.skin): PlayerSprites.Sprite);
+  let y = y -. 10. +. PlayerSprite.top;
 
   /* Legs */
   let amp = Geom.halfPi /. 2.;
@@ -130,32 +210,32 @@ let drawPlayer = (state, context, env) => {
     (Geom.halfPi *. amp /. 2., -. Geom.halfPi *. amp /. 2.)
   };
   Draw.pushMatrix(env);
-  Draw.translate(~x, ~y=y +. Players.male_body_height *. 0.2 +. 5., env);
+  Draw.translate(~x, ~y=y +. PlayerSprite.body_height *. 0.2 +. 5., env);
   Draw.rotate(walk, env);
-  PlayerSprite.leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_leg_width *. 0.2, 0.), ~flip=false, env);
+  PlayerSprite.leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.PlayerSprite.leg_width *. 0.2, 0.), ~flip=false, env);
   Draw.rotate(-.walk +. walk2, env);
-  PlayerSprite.leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_leg_width *. 0.2, 0.), ~flip=false, env);
+  PlayerSprite.leg(context.Shared.charSheet, ~scale=0.4, ~pos=(-.PlayerSprite.leg_width *. 0.2, 0.), ~flip=false, env);
   Draw.popMatrix(env);
 
 
   /* arm behind */
   let loff = state.player.facingLeft ? 1. : -1.;
-  let armTop = y -. Players.male_body_height *. 0.2 +. 10.;
+  let armTop = y -. PlayerSprite.body_height *. 0.2 +. 10.;
   Draw.pushMatrix(env);
   Draw.translate(~x=x +. shoulder *. loff, ~y=armTop, env);
   Draw.rotate(state.player.facingLeft ? walk/.2. : walk2/.2., env);
-  PlayerSprite.arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_arm_width *. 0.2, 0.), ~flip=false, env);
+  PlayerSprite.arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.PlayerSprite.arm_width *. 0.2, 0.), ~flip=false, env);
   Draw.popMatrix(env);
 
 
 
   /* body */
-  PlayerSprite.body(context.Shared.charSheet, ~scale=0.4, ~flip=false,
-  ~pos=(x -. Players.male_body_width *. 0.2, y -. Players.male_body_height *. 0.2 +. 5.), env);
+  PlayerSprite.body(context.Shared.charSheet, ~scale=0.4, ~flip=!state.player.facingLeft,
+  ~pos=(x -. PlayerSprite.body_width *. 0.2, y -. PlayerSprite.body_height *. 0.2 +. 5.), env);
 
   /* Head! */
   Draw.pushMatrix(env);
-  Draw.translate(~x=x, ~y=y -. Players.male_head_height *. 0.1 -. 5., env);
+  Draw.translate(~x=x, ~y=y -. PlayerSprite.head_height *. 0.1 -. 5. +. PlayerSprite.head_off, env);
   let bob = sin(state.player.walkTimer *. 20.) *. amp;
   let bob = state.player.isOnGround ? bob : 0.;
   Draw.translate(~x=0., ~y=bob *. 2., env);
@@ -168,7 +248,10 @@ let drawPlayer = (state, context, env) => {
   };
   /* Draw.rotate(state.player.facingLeft ? walk : -. walk, env); */
   PlayerSprite.head(context.Shared.charSheet, ~scale=0.4, ~flip=!state.player.facingLeft,
-  ~pos=( -. PlayerSprite.head_width *. 0.2, -. Players.male_head_height *. 0.3 ), env);
+  ~pos=(
+    -. (state.player.facingLeft ? PlayerSprite.head_rx : PlayerSprite.head_width -. PlayerSprite.head_rx) *. 0.4,
+    -. PlayerSprite.head_height *. 0.3
+  ), env);
   Draw.popMatrix(env);
 
   /* arm in front */
@@ -188,12 +271,12 @@ let drawPlayer = (state, context, env) => {
   Draw.pushMatrix(env);
   Draw.translate(~x=x +. shoulder *. loff *. -1., ~y=armTop, env);
   Draw.rotate(rot, env);
-  PlayerSprite.arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.Players.male_arm_width *. 0.2, 0.), ~flip=false, env);
+  PlayerSprite.arm(context.Shared.charSheet, ~scale=0.4, ~pos=(-.PlayerSprite.arm_width *. 0.2, 0.), ~flip=false, env);
 
   switch state.player.throw {
   | None => ()
   | Some((_, v, stone)) => {
-    drawStone(context, {Geom.x: 0., y: Play_assets.Players.male_arm_height *. 0.4}, stone, env)
+    drawStone(context, {Geom.x: 0., y: PlayerSprite.arm_height *. 0.4}, stone, env)
   }
   };
 

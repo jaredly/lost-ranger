@@ -23,7 +23,7 @@ let sprite = (loc, sheet, ~scale, ~flip, ~pos as (x, y)) =>
     )
   );
 
-type sprite = (~pos: (float, float), ~width: float, ~height: float) => unit;
+type sprite = (Reprocessing.imageT, ~scale: float, ~flip: bool, ~pos: (float, float), Reprocessing.glEnvT) => unit;
 
 /*$
   let process name raw source =

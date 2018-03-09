@@ -66,6 +66,7 @@ let start = (env) => {
     throw: None,
     box: Geom.Rect.create({Geom.y: float_of_int(ground) *. blockSize -. blockSize *. 0.7, x: blockSize}, blockSize *. 0.7, blockSize *. 1.4),
     throwSkill: 0.,
+    skin: 0,
     isOnGround: false,
     facingLeft: true,
     walkTimer: 0.,
@@ -361,6 +362,6 @@ let step = (state, context, env) => {
     userInput,
     stones,
     camera,
-    player: {...player, facingLeft, walkTimer}
+    player: {...player, facingLeft, walkTimer, skin: (Reprocessing.Env.keyPressed(Reprocessing.Events.Space, env) ? player.skin + 1 : player.skin)}
   }
 };
