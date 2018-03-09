@@ -95,6 +95,10 @@ module Circle = {
 
   let testPoint = ({rad, center}, point) => dist(point, center) <= rad;
   let testCircle = (c1, c2) => dist(c1.center, c2.center) <= c1.rad +. c2.rad;
+  let vectorToCircle = (c1, c2) => {
+    let magnitude = dist(c1.center, c2.center) -. c1.rad -. c2.rad;
+    {magnitude, theta: angleTo(c2.center, c1.center)}
+  };
   /** based on http://www.jeffreythompson.org/collision-detection/poly-circle.php */
   let testLine = (c, p1, p2) => {
     testPoint(c, p1) ||

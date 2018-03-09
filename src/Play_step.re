@@ -184,10 +184,56 @@ let getUserInput = (prev, env) => Reprocessing.({
   action: false,
 });
 
+let collisionPairs = (items, test) => {
+  let rec loop = (items) => {
+    switch items {
+    | [] => []
+    | [one, ...rest] => {
+      (List.filter(test(one), rest) |> List.map(other => (one, other)))
+      @ loop(rest)
+    }
+    }
+  };
+  loop(items)
+};
+
+let collideStones = stones => {
+  let boxWidth = blockSize *. 4.;
+  let boxes = Play_draw.gameWidthInt / 4 + 2;
+  let broad = Array.make(boxes, []);
+  let mutableStones = List.map(ref, stones);
+  List.iter(stoneRef => {
+    let stone = stoneRef.contents;
+    let {Geom.Circle.center: {Geom.x}, rad} = stone.Stone.circle;
+    let leftBox = (x -. rad) /. boxWidth |> int_of_float;
+    let rightBox = (x +. rad) /. boxWidth |> int_of_float;
+    broad[leftBox] = [stoneRef, ...broad[leftBox]];
+    if (leftBox != rightBox) {
+      broad[rightBox] = [stoneRef, ...broad[rightBox]];
+    };
+  }, mutableStones);
+  Array.iter(box => {
+    switch box {
+    | [] => ()
+    | [_alone] => ()
+    | stones => {
+      let pairs = collisionPairs(stones, (a, b) => Geom.Circle.testCircle(a^.Stone.circle, b^.Stone.circle));
+      List.iter(((one, other)) => {
+        let v = Geom.Circle.vectorToCircle(one^.Stone.circle, other^.Stone.circle) |> x => Geom.scaleVector(x, 0.25);
+        one := Stone.force(one^, v |> Geom.invertVector);
+        other := Stone.force(other^, v);
+      }, pairs)
+    }
+    }
+  }, broad);
+  List.map(x => x.contents, mutableStones)
+};
+
 let step = (state, context, env) => {
   let userInput = getUserInput(state.userInput, env);
 
-  let stones = moveStones(state.stones, state.blocks);
+  let stones = collideStones(state.stones);
+  let stones = moveStones(stones, state.blocks);
   let player = state.player;
   let (stones, player) =
 

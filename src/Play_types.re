@@ -48,6 +48,8 @@ module Fruit = {
 
 module Stone = {
   type t = {circle: Geom.Circle.t, vel: Geom.vector, rotation: float};
+  let push = (stone, vec) => {...stone, circle: Geom.Circle.push(stone.circle, vec)};
+  let force = (stone, vec) => {...stone, vel: Geom.addVectors(stone.vel, vec)};
 };
 
 module FruitTree = {
