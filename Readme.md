@@ -1,11 +1,6 @@
-# Purple Maze
+# Throw Rocks
 
-![screencast](./screencast.gif)
-
-It's a maze game, written in Reason.
-Planning to target mobile, web, and native desktop.
-
-I'll probably spin out a couple of the parts into standalone libraries (`Geom.re` in particular).
+A mini game, developed while working on a sandbox survival type thing.
 
 ## License
 
