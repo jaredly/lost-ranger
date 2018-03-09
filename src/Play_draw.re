@@ -225,46 +225,56 @@ let draw = (state, context, env) => {
   drawPlayer(state, context, env);
   /* GeomDraw.circle({Geom.Circle.center: state.player.box.pos, rad: blockSize /. 2.}, env); */
 
+  let inPosition = (drawPadding, {Geom.x, y} as pos) => {
+    let x0 = dx -. drawPadding;
+    let y0 = dy -. drawPadding;
+    let x1 = dx +. w +. drawPadding;
+    let y1 = dy +. h +. drawPadding;
 
-  Draw.fill(Reprocessing.Utils.color(~r=150, ~g=150, ~b=170, ~a=255), env);
-  let drawPadding = 200.;
-  let x0 = dx -. drawPadding;
-  let y0 = dy -. drawPadding;
-  let x1 = dx +. w +. drawPadding;
-  let y1 = dy +. h +. drawPadding;
-  state.stones |> List.iter(stone => {
-    let {Geom.x,y} = stone.Stone.circle.center;
     if (y > y0 && y < y1) {
-      let pos = if (x > x0 && x < x1) {
-        Some(stone.Stone.circle.Geom.Circle.center)
+      if (x > x0 && x < x1) {
+        Some(pos)
       } else {
         let left = x -. gameWidth;
         if (left > x0 && left < x1) {
-          Some(Geom.addPoints(stone.Stone.circle.Geom.Circle.center, {x: -.gameWidth, y: 0.}))
+          Some(Geom.addPoints(pos, {x: -.gameWidth, y: 0.}))
         } else {
           let right = x +. gameWidth;
           if (right > x0 && right < x1) {
-            Some(Geom.addPoints(stone.Stone.circle.Geom.Circle.center, {x: +.gameWidth, y: 0.}))
+            Some(Geom.addPoints(pos, {x: +.gameWidth, y: 0.}))
           } else {
             None
           }
         }
       };
-      switch pos {
-      | None => ()
-      | Some(pos) => {
-        drawStone(context, pos, stone, env)
-        /* GeomDraw.circle(circle, env) */
-      }
-      }
+    } else {
+      None
+    }
+  };
+
+  Draw.fill(Reprocessing.Utils.color(~r=150, ~g=150, ~b=170, ~a=255), env);
+  state.stones |> List.iter(stone => {
+    let {Geom.x,y} = stone.Stone.circle.center;
+    switch (inPosition(200., stone.Stone.circle.center)) {
+    | None => ()
+    | Some(pos) => {
+      drawStone(context, pos, stone, env)
+      /* GeomDraw.circle(circle, env) */
+    }
     };
     /* Draw.ellipsef(~center=Geom.tuple(stone.Stone.circle.center), ~radx=10., ~rady=10., env); */
   });
 
   state.textPos |> List.iter(((text, pos)) => {
-    Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(pos), ~body=text, env);
-    Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(pos |> Geom.addPoints({Geom.x: gameWidth, y: 0.})), ~body=text, env);
-    Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(pos |> Geom.addPoints({Geom.x: -.gameWidth, y: 0.})), ~body=text, env);
+    switch (inPosition(800., pos)) {
+    | None => ()
+    | Some(pos) => {
+      Draw.tint(Constants.black, env);
+      Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(pos), ~body=text, env);
+      Draw.noTint(env);
+      Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(Geom.addPoints(pos, {Geom.x: -1., y: -1.})), ~body=text, env);
+    }
+    }
   });
 
 };

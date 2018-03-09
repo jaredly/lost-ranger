@@ -33,18 +33,19 @@ let start = (env) => {
   let d = ref(0);
   for (x in 0 to Play_draw.gameWidthInt - 1) {
     let change = Random.float(10.) > 4.;
-    if (change) {
+    if (change && x > 2) {
       let off = ceil(sqrt(Random.float(16.)));
       d := min(10, max(-10, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
     };
+
     if (x mod int_of_float(width /. blockSize) == 0) {
-      textPositions := [{Geom.y: float_of_int(ground + d^ + 3) *. blockSize, x: float_of_int(x) *. blockSize}, ...textPositions^]
+      textPositions := [{Geom.y: float_of_int(ground + d^ + (x == 0 ? 1 : 3)) *. blockSize, x: float_of_int(x) *. blockSize}, ...textPositions^]
     };
+
     for (y in d^ to 50) {
       blocks[ground + y][x] = Some(Block.init(Block.Dirt, y == d^));
     };
   };
-  print_endline("populated");
 
   let texts = {
     let rec loop = (a, b) => {
@@ -60,7 +61,7 @@ let start = (env) => {
   let player = {
     vel: Geom.v0,
     throw: None,
-    box: Geom.Rect.create({Geom.y: float_of_int(ground - 5) *. blockSize -. blockSize *. 1.9, x: blockSize}, blockSize *. 0.7, blockSize *. 1.4),
+    box: Geom.Rect.create({Geom.y: float_of_int(ground) *. blockSize -. blockSize *. 0.7, x: blockSize}, blockSize *. 0.7, blockSize *. 1.4),
     throwSkill: 0.,
     isOnGround: false,
     facingLeft: true,
