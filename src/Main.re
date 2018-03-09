@@ -62,6 +62,14 @@ let draw = ({Shared.screenState, context}, env) => {
 let run = (assetDir, _) => Reprocessing.run(
   ~setup=setup(assetDir),
   ~title="Throw Rocks",
+  ~mouseDown=(state, env) => {
+    print_endline("mouse");
+    state
+  },
+  ~touchStart=(state, env) => {
+    print_endline("touch");
+    state
+  },
   ~draw,
   ()
 );

@@ -313,13 +313,12 @@ let draw = (state, context, env) => {
 
   Draw.translate(~x=-.dx, ~y=-.dy, env);
 
-
   let x0 = int_of_float(dx /. blockSize) - 1;
   let y0 = int_of_float(dy /. blockSize);
   let ww = int_of_float(w /. blockSize) + 1;
   let hh = int_of_float(h /. blockSize);
   for (x in x0 to x0 + ww) {
-    for (y in y0 to y0 + ww) {
+    for (y in y0 to y0 + hh) {
       switch (getBlock(state.blocks, (x, y))) {
       | None => ()
       | Some(block) => {
