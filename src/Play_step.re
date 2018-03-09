@@ -9,10 +9,11 @@ let followPlayer = (player, (a, b, w, h), gameWidth) => {
     (a, player)
   };
   let {Geom.x, y} = player.box.pos;
-  let padding = w /. 3.;
+  let hpadding = w /. 3.;
+  let vpadding = h /. 3.;
   ((
-    max(min(x -. padding, a), x +. padding -. w),
-    max(min(y -. padding, b), y +. padding -. h),
+    max(min(x -. hpadding, a), x +. hpadding -. w),
+    max(min(y -. vpadding, b), y +. vpadding -. h),
     w,
     h
   ), player)
@@ -24,8 +25,8 @@ let start = (env) => {
   let width = Reprocessing.Env.width(env) |> float_of_int;
   let height = Reprocessing.Env.height(env) |> float_of_int;
 
-  let ground = 20;
   let cols = int_of_float(width /. blockSize);
+  let ground = int_of_float(height /. blockSize) / 2;
 
   let textPositions = ref([]);
 
@@ -38,7 +39,7 @@ let start = (env) => {
       d := min(10, max(-10, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
     };
 
-    if (x mod int_of_float(width /. blockSize) == 0) {
+    if (x mod int_of_float(800. /. blockSize) == 0) {
       textPositions := [{Geom.y: float_of_int(ground + d^ + (x == 0 ? 1 : 3)) *. blockSize, x: float_of_int(x) *. blockSize}, ...textPositions^]
     };
     if (x > Play_draw.gameWidthInt - 2) {
@@ -58,7 +59,7 @@ let start = (env) => {
       | ([text, ...texts], [pos, ...poss]) => [(text, pos), ...loop(texts, poss)]
       }
     };
-    loop(Play_draw.pithyTexts |> List.rev, textPositions^)
+    loop(Play_draw.pithyTexts, textPositions^ |> List.rev)
   };
 
   let box = Play_draw.spriteBox({Geom.x: 0., y: 0.}, 0, 0.);

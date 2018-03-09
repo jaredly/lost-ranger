@@ -11,8 +11,6 @@ let setup = (assetDir, env) => {
 
   if (!Shared.isPhone) {
     if (Reprocessing.Env.maxWidth(env) < 800 && Reprocessing.Env.maxHeight(env) < 800) {
-      /* Mobile web perf is not too hot :( turning off round line caps makes it a bit better */
-      Reprocessing.Draw.strokeCap(Reprocessing_Common.Project, env);
       Reprocessing.Env.size(~width=Reprocessing.Env.maxWidth(env), ~height=Reprocessing.Env.maxHeight(env), env);
     } else {
       Reprocessing.Env.size(~width=800, ~height=800, env);
