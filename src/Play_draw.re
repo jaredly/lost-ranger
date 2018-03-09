@@ -139,13 +139,6 @@ let drawPlayer = (state, context, env) => {
 
   Draw.popMatrix(env);
 
-  /* switch state.player.throw {
-  | None => ()
-  | Some((_, v, stone)) => {
-    drawStone(context, rockPos(state, v, stone), stone, env)
-  }
-  }; */
-
 };
 
 let draw = (state, context, env) => {
@@ -188,42 +181,13 @@ let draw = (state, context, env) => {
         };
         Draw.popMatrix(env);
 
-        /* let color = switch block.Block.kind {
-        | Block.Dirt => Reprocessing.Utils.color(~r=120, ~g=100, ~b=50, ~a=255)
-        | Block.Rock => Reprocessing.Utils.color(~r=50, ~g=50, ~b=70, ~a=255)
-        };
-        Draw.fill(color, env);
-        Draw.stroke(Constants.white, env);
-        Draw.rectf(~pos=(x, y), ~width=blockSize , ~height=blockSize , env); */
-
       }
       }
     }
   };
-  /* Hashtbl.iter(((x, y), block) => { */
-    /* let x = float_of_int(x) *. blockSize;
-    let y = float_of_int(y) *. blockSize;
-    let color = switch block.Block.kind {
-    | Block.Dirt => Reprocessing.Utils.color(~r=120, ~g=100, ~b=50, ~a=255)
-    | Block.Rock => Reprocessing.Utils.color(~r=50, ~g=50, ~b=70, ~a=255)
-    };
-    Draw.fill(color, env);
-    Draw.rectf(~pos=(x, y), ~width=blockSize , ~height=blockSize , env); */
-    /* Draw.rectf(~pos=(x, y), ~width=blockSize -. 1., ~height=blockSize -. 1., env); */
-  /* }, state.blocks); */
-
-  /* Draw.strokeWeight(3, env);
-  Draw.stroke(Utils.color(~r=150, ~g=150, ~b=150, ~a=100), env);
-  switch (state.player.throw) {
-  | None => ()
-  | Some((p1, vec, _)) => GeomDraw.vec(Geom.addPoints({Geom.x: 0., y: -40.}, state.player.box.pos), vec, env)
-  };
-  Draw.noStroke(env); */
 
   Draw.noStroke(env);
-  /* Draw.stroke(Constants.green, env); */
   drawPlayer(state, context, env);
-  /* GeomDraw.circle({Geom.Circle.center: state.player.box.pos, rad: blockSize /. 2.}, env); */
 
   let inPosition = (drawPadding, {Geom.x, y} as pos) => {
     let x0 = dx -. drawPadding;
@@ -259,10 +223,8 @@ let draw = (state, context, env) => {
     | None => ()
     | Some(pos) => {
       drawStone(context, pos, stone, env)
-      /* GeomDraw.circle(circle, env) */
     }
     };
-    /* Draw.ellipsef(~center=Geom.tuple(stone.Stone.circle.center), ~radx=10., ~rady=10., env); */
   });
 
   state.textPos |> List.iter(((text, pos)) => {
