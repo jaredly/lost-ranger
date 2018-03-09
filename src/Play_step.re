@@ -218,7 +218,7 @@ let collideStones = stones => {
     let rightBox = (x +. rad) /. boxWidth |> floor |> int_of_float;
     broad[leftBox] = [stoneRef, ...broad[leftBox]];
     if (leftBox != rightBox) {
-      let rightBox = rightBox == boxes ? 0 : rightBox;
+      let rightBox = rightBox >= boxes ? 0 : rightBox;
       broad[rightBox] = [stoneRef, ...broad[rightBox]];
     };
   }, mutableStones);
