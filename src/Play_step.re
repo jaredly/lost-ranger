@@ -41,6 +41,9 @@ let start = (env) => {
     if (x mod int_of_float(width /. blockSize) == 0) {
       textPositions := [{Geom.y: float_of_int(ground + d^ + (x == 0 ? 1 : 3)) *. blockSize, x: float_of_int(x) *. blockSize}, ...textPositions^]
     };
+    if (x > Play_draw.gameWidthInt - 2) {
+      d := 0;
+    };
 
     for (y in d^ to 50) {
       blocks[ground + y][x] = Some(Block.init(Block.Dirt, y == d^));
@@ -198,35 +201,100 @@ let collisionPairs = (items, test) => {
 };
 
 let collideStones = stones => {
-  let boxWidth = blockSize *. 4.;
-  let boxes = Play_draw.gameWidthInt / 4 + 2;
+  open Stone;
+  let boxWidth = blockSize *. 1.;
+  let boxes = Play_draw.gameWidthInt / 1;
   let broad = Array.make(boxes, []);
-  let mutableStones = List.map(ref, stones);
+  let mutableStones = List.mapi((i, s) => ref((s, false, i)), stones);
   List.iter(stoneRef => {
-    let stone = stoneRef.contents;
+    let (stone, _, _) = stoneRef.contents;
     let {Geom.Circle.center: {Geom.x}, rad} = stone.Stone.circle;
-    let leftBox = (x -. rad) /. boxWidth |> int_of_float;
-    let rightBox = (x +. rad) /. boxWidth |> int_of_float;
+    let leftBox = (x -. rad) /. boxWidth |> floor |> int_of_float;
+    let leftBox = leftBox == -1 ? boxes - 1 : leftBox;
+    let rightBox = (x +. rad) /. boxWidth |> floor |> int_of_float;
     broad[leftBox] = [stoneRef, ...broad[leftBox]];
     if (leftBox != rightBox) {
+      let rightBox = rightBox == boxes ? 0 : rightBox;
       broad[rightBox] = [stoneRef, ...broad[rightBox]];
     };
   }, mutableStones);
-  Array.iter(box => {
+  let pairHash = Hashtbl.create(100);
+  Array.iteri((i, box) => {
     switch box {
     | [] => ()
     | [_alone] => ()
     | stones => {
-      let pairs = collisionPairs(stones, (a, b) => Geom.Circle.testCircle(a^.Stone.circle, b^.Stone.circle));
-      List.iter(((one, other)) => {
-        let v = Geom.Circle.vectorToCircle(one^.Stone.circle, other^.Stone.circle) |> x => Geom.scaleVector(x, 0.25);
-        one := Stone.force(one^, v |> Geom.invertVector);
-        other := Stone.force(other^, v);
+      let checkLoop = i == 0 || i == boxes - 1;
+      let pairs = collisionPairs(
+        stones,
+        (a, b) => {
+          let (a, _, ai) = a^;
+          let (b, _, bi) = b^;
+          let key = (min(ai, bi), max(ai, bi));
+          if (Hashtbl.mem(pairHash, key)) {
+            false
+          } else {
+            if (Geom.Circle.testCircle(a.Stone.circle, b.Stone.circle)) {
+              Hashtbl.replace(pairHash, key, true);
+              true
+            } else if (checkLoop) {
+              let dx = a.circle.center.x -. b.circle.center.x;
+              /* We've looped */
+              if (abs_float(dx) > boxWidth) {
+                if (a.circle.center.x > b.circle.center.x) {
+                  Geom.Circle.testCircle(Geom.Circle.translate(a.circle, {Geom.x: -.gameWidth, y: 0.}), b.circle)
+                } else {
+                  Geom.Circle.testCircle(Geom.Circle.translate(b.circle, {Geom.x: -.gameWidth, y: 0.}), a.circle)
+                }
+              } else {
+                false
+              }
+            } else {
+              false
+            }
+          }
+        }
+      );
+      List.iter(((oneRef, otherRef)) => {
+        let (one, _, ai) = oneRef^;
+        let (other, _, bi) = otherRef^;
+        let v = if (checkLoop) {
+          let dx = one.circle.center.x -. other.circle.center.x;
+          /* We've looped */
+          if (abs_float(dx) > boxWidth) {
+            if (one.circle.center.x > other.circle.center.x) {
+              Geom.Circle.vectorToCircle(Geom.Circle.translate(one.circle, {Geom.x: -.gameWidth, y: 0.}), other.circle)
+            } else {
+              Geom.Circle.vectorToCircle(one.circle, Geom.Circle.translate(other.circle, {Geom.x: -.gameWidth, y: 0.}))
+            }
+          } else {
+            Geom.Circle.vectorToCircle(one.circle, other.circle);
+          }
+        } else {
+          Geom.Circle.vectorToCircle(one.circle, other.circle);
+        };
+         /* |> x => Geom.scaleVector(x, 0.5); */
+        let first = (one.Stone.circle.rad *. one.Stone.circle.rad);
+        let second = (other.Stone.circle.rad *. other.Stone.circle.rad);
+        let fshare = first /. (first +. second);
+        /* |> x => Geom.scaleVector(x, 0.25); */
+        oneRef := (Stone.force(one, v |> Geom.invertVector |> x => Geom.scaleVector(x, 1. -. fshare)), true, ai);
+        otherRef := (Stone.force(other, Geom.scaleVector(v, fshare)), true, bi);
       }, pairs)
     }
     }
   }, broad);
-  List.map(x => x.contents, mutableStones)
+  /* Some cool down */
+  List.map(x => {
+    let (stone, hit, _) = x^;
+    if (hit) {
+      let vel = Geom.scaleVector(stone.Stone.vel, 0.8);
+      /* let vel = abs_float(vel.Geom.magnitude) < 1. ? Geom.v0 : vel; */
+      {...stone, Stone.vel}
+    } else {
+      stone
+    }
+  }, mutableStones)
 };
 
 let step = (state, context, env) => {
