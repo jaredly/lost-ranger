@@ -15,7 +15,7 @@
     "js": "rsb js",
     "serve": "rsb js:serve",
     "clean": "rm -rf _build && bsb -clean-world",
-    "publish": "npm run js && cd public && surge . -d lost-ranger.surge.sh",
+    "publish": "npm run js && cd public && surge . -d throw-rocks.surge.sh",
     "test": "bsb -make-world -backend bytecode && ./lib/bs/bytecode/test.byte",
     "build_assets": "cinaps -i src/_Play_assets_src.ml && refmt src/_Play_assets_src.ml > src/Play_assets.re"
   },
