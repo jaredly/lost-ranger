@@ -1,13 +1,5 @@
 open Play_types;
 
-let pithyTexts = [
-  "Throw rocks... that's the whole game",
-  "Try throwing upward while jumping",
-  "There's often a cliff on the other side of the world",
-  "You could try playing golf",
-  "Many thanks to kenny.nl for the assets"
-];
-
 let followPlayer = (player, (a, b, w, h), gameWidth) => {
   let (a, player) = if (player.box.pos.x < 0.) {
     (a +. gameWidth, {...player, box: {...player.box, pos: {...player.box.pos, x: gameWidth +. player.box.pos.x}}})
@@ -26,7 +18,7 @@ let followPlayer = (player, (a, b, w, h), gameWidth) => {
   ), player)
 };
 
-let gameWidth = blockSize *. 100.;
+let gameWidth = Play_draw.gameWidth;
 
 let start = (env) => {
   let width = Reprocessing.Env.width(env) |> float_of_int;
@@ -35,19 +27,35 @@ let start = (env) => {
   let ground = 20;
   let cols = int_of_float(width /. blockSize);
 
-  let blocks = Array.make_matrix(500, 100, None);
+  let textPositions = ref([]);
+
+  let blocks = Array.make_matrix(500, Play_draw.gameWidthInt, None);
   let d = ref(0);
-  for (x in 0 to 99) {
+  for (x in 0 to Play_draw.gameWidthInt - 1) {
     let change = Random.float(10.) > 4.;
     if (change) {
       let off = ceil(sqrt(Random.float(16.)));
       d := min(10, max(-10, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
+    };
+    if (x mod int_of_float(width /. blockSize) == 0) {
+      textPositions := [{Geom.y: float_of_int(ground + d^ + 3) *. blockSize, x: float_of_int(x) *. blockSize}, ...textPositions^]
     };
     for (y in d^ to 50) {
       blocks[ground + y][x] = Some(Block.init(Block.Dirt, y == d^));
     };
   };
   print_endline("populated");
+
+  let texts = {
+    let rec loop = (a, b) => {
+      switch (a, b) {
+      | ([], _) => []
+      | (_, []) => []
+      | ([text, ...texts], [pos, ...poss]) => [(text, pos), ...loop(texts, poss)]
+      }
+    };
+    loop(Play_draw.pithyTexts |> List.rev, textPositions^)
+  };
 
   let player = {
     vel: Geom.v0,
@@ -66,6 +74,7 @@ let start = (env) => {
   let (camera, player) = followPlayer(player, (0., 0., width, height), gameWidth);
 
   {
+    textPos: texts,
     animals: [],
     trees: [],
     blocks,

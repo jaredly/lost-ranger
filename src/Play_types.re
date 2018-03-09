@@ -98,6 +98,7 @@ type userInput = {
 
 type state = {
   blocks: array(array(option(Block.t))),
+  textPos: list((string, Geom.point)),
   animals: list(Animal.t),
   trees: list(FruitTree.t),
   looseFruit: list(Fruit.t),

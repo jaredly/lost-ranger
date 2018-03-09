@@ -1,9 +1,19 @@
 open Play_types;
 open Reprocessing;
 
+let pithyTexts = [
+  "Throw rocks",
+  "That's the whole game",
+  "Try throwing upward while jumping",
+  "There's often a cliff on the other side of the world",
+  "You could try playing golf",
+  "Many thanks to kenney.nl for the assets"
+];
+
 let textColor = Constants.black;
 
-let gameWidth = blockSize *. 100.;
+let gameWidthInt = 120;
+let gameWidth = blockSize *. float_of_int(gameWidthInt);
 
 let drawStone = (context, pos, stone, env) => {
   let (x, y) = Geom.tuple(pos);
@@ -160,8 +170,6 @@ let draw = (state, context, env) => {
         let y = float_of_int(y) *. blockSize +. blockSize /. 2.;
         let sprite = switch block.Block.kind {
         | Block.Dirt => Play_assets.Tiles.dirt
-        /* | Block.Dirt => Play_assets.ExtraItems.grass_top */
-        /* | Block.Rock => Play_assets.ExtraItems.sand_top */
         | Block.Rock => Play_assets.Tiles.rock
         };
 
@@ -253,5 +261,10 @@ let draw = (state, context, env) => {
     /* Draw.ellipsef(~center=Geom.tuple(stone.Stone.circle.center), ~radx=10., ~rady=10., env); */
   });
 
+  state.textPos |> List.iter(((text, pos)) => {
+    Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(pos), ~body=text, env);
+    Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(pos |> Geom.addPoints({Geom.x: gameWidth, y: 0.})), ~body=text, env);
+    Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(pos |> Geom.addPoints({Geom.x: -.gameWidth, y: 0.})), ~body=text, env);
+  });
 
 };
