@@ -454,12 +454,14 @@ let draw = (state, context, env) => {
   drawWorld(state, context, env);
   Draw.popMatrix(env);
 
-  /* Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=50), env); */
-  touchButtons(env) |> List.iter(((action, shape)) => {
-    drawControl(action, shape.Geom.Circle.center, env);
-    /* GeomDraw.circle(shape, env); */
-  });
-  /* GeomDraw.circle(joystickCircle(env), env); */
+  if (Reprocessing.Env.isTouchScreen(env)) {
+    /* Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=50), env); */
+    touchButtons(env) |> List.iter(((action, shape)) => {
+      drawControl(action, shape.Geom.Circle.center, env);
+      /* GeomDraw.circle(shape, env); */
+    });
+    /* GeomDraw.circle(joystickCircle(env), env); */
+  };
 
   Reprocessing.Draw.tint(textColor, env);
   Reprocessing.Draw.text(~font=context.textFont, ~body=Printf.sprintf("Throw rocks"), ~pos=(10, 10), env);

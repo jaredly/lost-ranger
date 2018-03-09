@@ -311,7 +311,12 @@ let collideStones = stones => {
 };
 
 let step = (state, context, env) => {
-  let userInput = mergeInputs(getUserInput(state.userInput, env), getTouchInput(state, env));
+  let userInput = getUserInput(state.userInput, env);
+  let userInput = if (Reprocessing.Env.isTouchScreen(env)) {
+    mergeInputs(userInput, getTouchInput(state, env));
+  } else {
+    userInput
+  };
 
   let stones = collideStones(state.stones);
   let stones = moveStones(stones, state.blocks);
