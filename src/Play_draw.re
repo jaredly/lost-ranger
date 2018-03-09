@@ -113,7 +113,7 @@ let module PlayerSprites = {
 
   let module Alien = {
     let top = 0.;
-    let head_off = 1.;
+    let head_off = 8.;
     let height = 36.;
     let width = 14.;
     let leg = Players.alien_leg;
@@ -133,7 +133,7 @@ let module PlayerSprites = {
   let module Gnome = {
     let top = 0.;
     let head_off = 10.;
-    let height = 32.;
+    let height = 30.;
     let width = 14.;
     let leg = Players.gnome_leg;
     let arm = Players.gnome_arm;

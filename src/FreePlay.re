@@ -33,5 +33,12 @@ let draw = (status, context, env) => {
 
   Reprocessing.Draw.text(~font=context.smallFont, ~body="by Jared Forsyth", ~pos=(10, int_of_float(context.height) - 60), env);
   Reprocessing.Draw.text(~font=context.smallFont, ~body="Made with ReasonML and Reprocessing", ~pos=(10, int_of_float(context.height) - 30), env);
+
+
+  let w = int_of_float(context.width);
+  Reprocessing.Draw.text(~font=context.smallFont, ~body="Tap & drag to throw a rock", ~pos=(w - 250, 10), env);
+  Reprocessing.Draw.text(~font=context.smallFont, ~body="Space to change character", ~pos=(w - 250, 30), env);
+
+
   Reprocessing.Draw.noTint(env);
 };
