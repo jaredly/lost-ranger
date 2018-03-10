@@ -66,10 +66,17 @@ let allShapes = (env) => {
 let polyPolyResponse = (env) => {
 
   let mainPoly = Geom.Polygon.fromVertices(
-    angleRing(7) |> Array.of_list |> Array.map(theta => (
-      Geom.addVectorToPoint({magnitude: 20. +. cos(theta *. 5.) *. 10., theta}, mousePos(env))
-    ))
-  );
+    [|
+    {x: 0.,  y: 20.},
+    {x: 40., y: 0.},
+    {x: 10., y: 40.},
+    {x: 20., y: 20.}
+    |]
+    /* angleRing(4) |> Array.of_list |> Array.map(theta => (
+      Geom.addVectorToPoint({magnitude: 20. +. cos(theta *. 2.) *. 10., theta}, mousePos(env))
+    )) */
+  ) |> x => Geom.Polygon.translate(x, mousePos(env));
+
 
   let poly = Geom.Polygon.fromVertices(
     angleRing(5) |> Array.of_list |> Array.map(theta => (
@@ -84,7 +91,7 @@ let polyPolyResponse = (env) => {
 
   let vel = {Geom.magnitude: 150., theta: 0.};
 
-  angleRing(3) |> List.iter(theta => {
+  angleRing(1) |> List.iter(theta => {
     let vel = {Geom.magnitude: 150., theta};
 
     let moved = Polygon.push(mainPoly, vel);

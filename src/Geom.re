@@ -520,6 +520,7 @@ module Polygon = {
   };
 
   let push = ({aabb, vertices}, vec) => {aabb: Aabb.push(aabb, vec), vertices: Array.map(addVectorToPoint(vec), vertices)};
+  let translate = ({aabb, vertices}, pos) => {aabb: Aabb.translate(aabb, pos), vertices: Array.map(addPoints(pos), vertices)};
   let center = ({aabb}) => Aabb.center(aabb);
 
   /** Should return lines in a clockwise orientation...

@@ -65,12 +65,12 @@ let pointToLine = (vec, point, p1, p2) => {
   let angleDBC = vecOfLine.theta -. vec.theta -. halfPi;
 
   let distFromP1ToIntersection = -. bd /. cos(angleDBC);
-  if (distFromP1ToIntersection > 0. && distFromP1ToIntersection < vecOfLine.magnitude) {
 
     let distToIntersection = Geom.vx(vecToP1RelativeToVec) -. distFromP1ToIntersection *. sin(angleDBC);
-    if (distToIntersection > vec.magnitude) {
-      (v0, 0.)
-    } else {
+
+  let didCross = (distFromP1ToIntersection > 0. && distFromP1ToIntersection < vecOfLine.magnitude)
+  && (distToIntersection <= vec.magnitude);
+
 
       let distFromPenetrationToIntersection = vec.magnitude -. distToIntersection;
       let vecFromIntersectionToPenetrationFromP1Perspective = {
@@ -80,11 +80,7 @@ let pointToLine = (vec, point, p1, p2) => {
       ({
         magnitude: Geom.vy(vecFromIntersectionToPenetrationFromP1Perspective),
         theta: vecOfLine.theta -. halfPi
-      }, distFromPenetrationToIntersection);
-    }
-  } else {
-    (v0, 0.)
-  }
+      }, didCross ? distFromPenetrationToIntersection : 0.);
 };
 
 let pointToRect = (vec, point, rect) => {
