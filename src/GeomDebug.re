@@ -63,9 +63,20 @@ let allShapes = (env) => {
 };
 
 
+let regularPoly = (center, sides, size) => {
+  Geom.Polygon.fromVertices(
+    angleRing(sides) |> Array.of_list |> Array.map(theta => (
+      Geom.addVectorToPoint({magnitude: size, theta}, center)
+    ))
+  )
+};
+
 let polyPolyResponse = (env) => {
 
-  let mainPoly = Geom.Polygon.fromVertices(
+  let mainPoly = regularPoly(mousePos(env), 5, 30.);
+
+  /* This was to test non-convex polygons... it didn't work :( */
+  /* let mainPoly = Geom.Polygon.fromVertices(
     [|
     {x: 0.,  y: 20.},
     {x: 40., y: 0.},
@@ -75,14 +86,15 @@ let polyPolyResponse = (env) => {
     /* angleRing(4) |> Array.of_list |> Array.map(theta => (
       Geom.addVectorToPoint({magnitude: 20. +. cos(theta *. 2.) *. 10., theta}, mousePos(env))
     )) */
-  ) |> x => Geom.Polygon.translate(x, mousePos(env));
+  ) |> x => Geom.Polygon.translate(x, mousePos(env)); */
 
 
-  let poly = Geom.Polygon.fromVertices(
-    angleRing(5) |> Array.of_list |> Array.map(theta => (
-      Geom.addVectorToPoint({magnitude: 100., theta}, {x: 400., y: 400.})
+  let poly = regularPoly({x: 400., y: 400.}, 8, 100.);
+  /* let poly = Geom.Polygon.fromVertices(
+    angleRing(8) |> Array.of_list |> Array.map(theta => (
+      Geom.addVectorToPoint({magnitude: 100. +. cos(theta *. 2.) *. 50., theta}, {x: 400., y: 400.})
     ))
-  );
+  ); */
 
   Draw.stroke(withAlpha(0.5, Constants.green), env);
   GeomDraw.polygon(poly, env);
@@ -91,7 +103,7 @@ let polyPolyResponse = (env) => {
 
   let vel = {Geom.magnitude: 150., theta: 0.};
 
-  angleRing(1) |> List.iter(theta => {
+  angleRing(7) |> List.iter(theta => {
     let vel = {Geom.magnitude: 150., theta};
 
     let moved = Polygon.push(mainPoly, vel);

@@ -66,12 +66,19 @@ let pointToLine = (vec, point, p1, p2) => {
 
   let distFromP1ToIntersection = -. bd /. cos(angleDBC);
 
+
+  let didCross = (distFromP1ToIntersection > 0. && distFromP1ToIntersection < vecOfLine.magnitude);
+  /** Remove these bailouts if you want to try non-convex polygon stuff */
+  /* if (!didCross) {
+    (v0, 0.)
+  } else { */
     let distToIntersection = Geom.vx(vecToP1RelativeToVec) -. distFromP1ToIntersection *. sin(angleDBC);
 
-  let didCross = (distFromP1ToIntersection > 0. && distFromP1ToIntersection < vecOfLine.magnitude)
-  && (distToIntersection <= vec.magnitude);
+    let didCross = didCross && (distToIntersection <= vec.magnitude);
 
-
+    /* if (!didCross) {
+      (v0, 0.)
+    } else { */
       let distFromPenetrationToIntersection = vec.magnitude -. distToIntersection;
       let vecFromIntersectionToPenetrationFromP1Perspective = {
         magnitude: distFromPenetrationToIntersection,
@@ -81,6 +88,8 @@ let pointToLine = (vec, point, p1, p2) => {
         magnitude: Geom.vy(vecFromIntersectionToPenetrationFromP1Perspective),
         theta: vecOfLine.theta -. halfPi
       }, didCross ? distFromPenetrationToIntersection : 0.);
+    /* }
+  } */
 };
 
 let pointToRect = (vec, point, rect) => {
@@ -132,7 +141,8 @@ let polyToPoly = (vec, p1, p2) => {
   |> fst
 };
 
-let _polyToPoly = (vec, poly1, poly2) => {
+/** This was an attempt at non-convex polygons. Didn't work :/ */
+let polyToPoly = (vec, poly1, poly2) => {
   open Polygon;
   Polygon.lines(poly2) |> List.map(((p1, p2)) => {
     poly1.vertices
