@@ -479,5 +479,5 @@ let draw = (state, context, env) => {
   Reprocessing.Draw.noTint(env);
 };
 
-let draw = GeomDebug.draw;
+/* let draw = GeomDebug.draw; */
 

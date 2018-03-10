@@ -31,7 +31,20 @@ let pointToCircle = (vec, point, {Circle.center, rad}) => {
   /** This is almost our last deal */
   let amountIntruded = vec.magnitude +. legToIntersectionPoint -. distToClosestPoint;
 
+  /* if (compare(legToIntersectionPoint, nan) == 0) {
+    print_endline("LEG NAN")
+  };
+  if (compare(distFromCircleToClosest, nan) == 0) {
+    print_endline("DIST CIRCLE NAN")
+  }; */
+
   let angleBetweenClosestAndIntersectionForCircle = acos(distFromCircleToClosest /. rad);
+
+  /* NOTE the nans look like they're coming from
+  distFromCircleToClosest being larger than rad */
+  /* if (compare(angleBetweenClosestAndIntersectionForCircle, nan) == 0) {
+    print_endline("ANGLE NAN" ++ string_of_float(distFromCircleToClosest /. rad))
+  }; */
 
   let vecIntrudedRelativeToEverything = {
     magnitude: amountIntruded,
@@ -41,9 +54,25 @@ let pointToCircle = (vec, point, {Circle.center, rad}) => {
   let amountToPushBack = Geom.vy(vecIntrudedRelativeToEverything);
   let angleToPushBack = (Geom.halfPi -. angleBetweenClosestAndIntersectionForCircle) +. vec.theta -. pi;
 
-  {
-    magnitude: amountToPushBack,
-    theta: angleToPushBack
+  if (vec.magnitude < amountToPushBack || compare(amountToPushBack, nan) == 0) {
+    /* {magnitude: 0.1, theta: 0.} */
+    {
+      magnitude: rad -. vecToCircle.magnitude,
+      theta: vecToCircle.theta +. pi
+    }
+    /* v0 */
+  } else {
+    /* if (amountToPushBack > 10.) { */
+      /* print_endline(string_of_float(amountToPushBack)); */
+    /* }; */
+    {
+      magnitude: amountToPushBack,
+      theta: angleToPushBack
+    }
+    /* {
+      magnitude: rad -. vecToCircle.magnitude,
+      theta: vecToCircle.theta +. pi
+    } */
   }
 };
 

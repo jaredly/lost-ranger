@@ -46,6 +46,7 @@ let blockCollide = (center, vel, bounce, check, getCollisionVector, blocks) => {
         let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
         if (check(moved, blockBox)) {
           let add = getCollisionVector(vel, moved, blockBox);
+          /* let add = Geom.scaleVector(add, 0.5); */
           /* let add = bounce ? {
             open Geom;
             let amount = vx({...vel, theta: vel.theta -. add.theta}) *. 0.9;
