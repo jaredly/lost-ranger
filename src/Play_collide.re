@@ -136,6 +136,15 @@ let module Mover = (Config: MoveConfig) => {
 
 let testRect = (rect, move, aabb) => Geom.Rect.testAabb(Geom.Rect.ptranslate(rect, move), aabb);
 let collideRect = (rect, vel, move, aabb) => Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb);
+/* let collideRect = (rect, vel, move, aabb) => {
+  let res = GeomCollide.rectToRect(vel, Geom.Rect.ptranslate(rect, move), Geom.Rect.fromAabb(aabb));
+  let res = Geom.scaleVector(res, 0.5);
+  if (abs_float(res.magnitude) > abs_float(vel.magnitude)) {
+    Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb);
+  } else {
+    res
+  }
+}; */
 
 let testCircle = (circle, move, aabb) => Geom.Aabb.testCircle(aabb, Geom.Circle.ptranslate(circle, move));
 let collideCircle = (circle, vel, move, aabb) => Geom.Aabb.collideToCircle(vel, aabb, Geom.Circle.ptranslate(circle, move));
