@@ -62,6 +62,94 @@ let allShapes = (env) => {
 
 };
 
+
+let polyPolyResponse = (env) => {
+
+  let mainPoly = Geom.Polygon.fromVertices(
+    angleRing(7) |> Array.of_list |> Array.map(theta => (
+      Geom.addVectorToPoint({magnitude: 20. +. cos(theta *. 5.) *. 10., theta}, mousePos(env))
+    ))
+  );
+
+  let poly = Geom.Polygon.fromVertices(
+    angleRing(5) |> Array.of_list |> Array.map(theta => (
+      Geom.addVectorToPoint({magnitude: 100., theta}, {x: 400., y: 400.})
+    ))
+  );
+
+  Draw.stroke(withAlpha(0.5, Constants.green), env);
+  GeomDraw.polygon(poly, env);
+  Draw.noFill(env);
+  Draw.stroke(withAlpha(0.2, Constants.black), env);
+
+  let vel = {Geom.magnitude: 150., theta: 0.};
+
+  angleRing(3) |> List.iter(theta => {
+    let vel = {Geom.magnitude: 150., theta};
+
+    let moved = Polygon.push(mainPoly, vel);
+    Draw.stroke(withAlpha(0.3, Constants.blue), env);
+    GeomDraw.vec(Polygon.center(mainPoly), vel, env);
+
+    mainPoly.Polygon.vertices |> Array.iter(p => {
+      GeomDraw.vec(p, vel, env)
+    });
+
+    Draw.stroke(withAlpha(0.1, Constants.red), env);
+    GeomDraw.polygon(moved, env);
+
+    if (Geom.Polygon.testPolygon(moved, poly)) {
+      let response =  GeomCollide.polyToPoly(vel, mainPoly, poly);
+      Draw.stroke(Constants.blue, env);
+      GeomDraw.vec(Polygon.center(moved), response, env);
+      let final = Polygon.push(moved, response);
+      GeomDraw.polygon(final, env);
+      Draw.noStroke(env);
+    };
+  });
+
+};
+
+
+
+let rectRectResponse = (env) => {
+  let mainRect = Geom.Rect.create(mousePos(env), 40., 40.);
+
+  let rect = Geom.Rect.create({Geom.x: 400., y: 400.}, 200., 200.);
+  Draw.fill(withAlpha(0.1, Constants.green), env);
+  GeomDraw.rect(rect, env);
+  Draw.noFill(env);
+  Draw.stroke(withAlpha(0.2, Constants.black), env);
+  /* GeomDraw.rect(Rect.addMargin(rect, circle.rad, circle.rad), env); */
+
+  angleRing(10) |> List.iter(theta => {
+    let vel = {Geom.magnitude: 150., theta};
+
+    let moved = Rect.push(mainRect, vel);
+    Draw.stroke(withAlpha(0.3, Constants.blue), env);
+    GeomDraw.vec(mainRect.Rect.pos, vel, env);
+
+    Rect.points(mainRect) |> List.iter(p => {
+      GeomDraw.vec(p, vel, env)
+    });
+
+    Draw.fill(withAlpha(0.1, Constants.red), env);
+    GeomDraw.rect(moved, env);
+
+    Draw.noStroke(env);
+    if (Geom.Rect.testRect(rect, moved)) {
+      Draw.noFill(env);
+      let response =  GeomCollide.rectToRect(vel, mainRect, rect);
+      Draw.stroke(Constants.blue, env);
+      GeomDraw.vec(moved.Rect.pos, response, env);
+      let final = Rect.push(moved, response);
+      GeomDraw.rect(final, env);
+      Draw.noStroke(env);
+    };
+  });
+
+};
+
 let circleRectResponse = (env) => {
   let circle = {Circle.center: mousePos(env), rad: 20.};
 
@@ -115,7 +203,7 @@ let pointRectResponse = (env) => {
   GeomDraw.vec(Geom.addVectorToPoint(vec, point), response, env);
 
   Rect.sides(rect) |> List.iter(((p1, p2)) => {
-    let response = GeomCollide.pointToLine(vec, point, p1, p2);
+    let response = GeomCollide.pointToLine(vec, point, p1, p2) |> fst;
     Draw.stroke(
       response.magnitude > 0. ? Constants.green : Constants.red
     , env);
@@ -149,7 +237,7 @@ let pointLineResponse = (env) => {
 
   GeomDraw.vec(point, vec, env);
 
-  let response = GeomCollide.pointToLine(vec, point, p1, p2);
+  let response = GeomCollide.pointToLine(vec, point, p1, p2) |> fst;
 
   /* GeomDraw.vec(Geom.addVectorToPoint(vec, point), response, env); */
 
@@ -272,6 +360,8 @@ let draw = (state, context, env) => {
 
   /* let spots = angleRing(20) |> List.map(theta => ({Geom.magnitude: 100., theta}, circle.Geom.Circle.center)); */
   /* pointRectResponse(env); */
-  circleRectResponse(env);
+  /* circleRectResponse(env); */
+  /* rectRectResponse(env); */
+  polyPolyResponse(env);
 
 };

@@ -261,6 +261,7 @@ module Aabb = {
   let ptranslate = ({x0, y0, x1, y1}, {dx, dy}) => {x0: x0 +. dx, x1: x1 +. dx, y0: y0 +. dy, y1: y1 +. dy};
   let fromPoint = ({x, y}) => {x0: x, y0: y, x1: x, y1: y};
   let push = (r, v) => ptranslate(r, vectorToPector(v));
+  let center = ({x0, y0, x1, y1}) => {x: x0 +. (x1 -. x0) /. 2., y: y0 +. (y1 -. y0) /. 2.};
 
   let fromPoints = points => {
     Array.fold_left(
@@ -429,6 +430,15 @@ module Rect = {
     r1.pos.y -. r1.hh < b.y1
   });
 
+  /** Points clockwise */
+  let points = ({pos: {x, y}, hh, hw}) => {
+    let tl = {x: x -. hw, y: y -. hh};
+    let tr = {x: x +. hw, y: y -. hh};
+    let bl = {x: x -. hw, y: y +. hh};
+    let br = {x: x +. hw, y: y +. hh};
+    [tl, tr, br, bl]
+  };
+
   /** Sides clockwise */
   let sides = ({pos: {x, y}, hh, hw}) => {
     let tl = {x: x -. hw, y: y -. hh};
@@ -503,9 +513,26 @@ module Rect = {
 };
 
 module Polygon = {
+  /** Vertices should be *clockwise* */
   type t = {
     aabb: Aabb.t,
     vertices: array(point),
+  };
+
+  let push = ({aabb, vertices}, vec) => {aabb: Aabb.push(aabb, vec), vertices: Array.map(addVectorToPoint(vec), vertices)};
+  let center = ({aabb}) => Aabb.center(aabb);
+
+  /** Should return lines in a clockwise orientation...
+   * Not sure if it does
+   * Might need to reverse them to get truly clockwise
+   */
+  let lines = p => {
+    Array.fold_left(
+      ((prev, lines), point) => (
+        point, [(prev, point), ...lines]
+      ), (p.vertices[Array.length(p.vertices) - 1], []), p.vertices)
+      |> snd
+      /* |> List.rev */
   };
 
   let fromVertices = vertices => {vertices, aabb: Aabb.fromPoints(vertices)};
@@ -534,6 +561,24 @@ module Polygon = {
   let testPoint = ({aabb, vertices}, point) => {
     Aabb.testPoint(aabb, point) &&
     verticesToPoint(vertices, point)
+  };
+
+  let testPolygon = (p1, p2) => {
+    Aabb.testAabb(p1.aabb, p2.aabb) &&
+    {
+      /* TODO maybe pick the one with fewer points? */
+      let l = Array.length(p1.vertices);
+      let rec loop = i => {
+        if (i >= l) {
+          false
+        } else if (testPoint(p2, p1.vertices[i])) {
+          true
+        } else {
+          loop(i+1)
+        }
+      };
+      loop(0)
+    }
   };
 
   let testCircle = ({aabb, vertices}, {Circle.rad, center} as c) => {

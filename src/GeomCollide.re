@@ -69,7 +69,7 @@ let pointToLine = (vec, point, p1, p2) => {
 
     let distToIntersection = Geom.vx(vecToP1RelativeToVec) -. distFromP1ToIntersection *. sin(angleDBC);
     if (distToIntersection > vec.magnitude) {
-      v0
+      (v0, 0.)
     } else {
 
       let distFromPenetrationToIntersection = vec.magnitude -. distToIntersection;
@@ -77,20 +77,21 @@ let pointToLine = (vec, point, p1, p2) => {
         magnitude: distFromPenetrationToIntersection,
         theta: vec.theta -. vecOfLine.theta,
       };
-      {
+      ({
         magnitude: Geom.vy(vecFromIntersectionToPenetrationFromP1Perspective),
         theta: vecOfLine.theta -. halfPi
-      };
+      }, distFromPenetrationToIntersection);
     }
   } else {
-    v0
+    (v0, 0.)
   }
 };
 
 let pointToRect = (vec, point, rect) => {
   Rect.sides(rect)
   |> List.map(((p1, p2)) => pointToLine(vec, point, p1, p2))
-  |> List.fold_left((a, b) => (a.magnitude > b.magnitude ? a : b), v0)
+  |> List.fold_left((a, b) => (snd(a) > snd(b) ? a : b), (v0, 0.))
+  |> fst
 };
 
 let circleToRect = (vec, circle, rect) => {
@@ -98,4 +99,58 @@ let circleToRect = (vec, circle, rect) => {
   /* rect */
   Rect.addMargin(rect, circle.rad, circle.rad)
   )
+};
+
+/** Test each point of the first against each line of the other.
+ * We're looking for *greatest penetration*, not necessarily
+ * greatest impulse response.
+ * Not sure if this will play out for any polygon.
+*/
+let rectToRect = (vec, r1, r2) => {
+  Rect.points(r1)
+  |> List.map(point => {
+    Rect.sides(r2) |> List.map(((p1, p2)) => pointToLine(vec, point, p1, p2))
+    /* pointToRect(vec, point, r2) */
+  })
+  |> List.concat
+  |> List.fold_left((a, b) => (snd(a) > snd(b) ? a : b), (v0, 0.))
+  |> fst
+};
+
+/**
+ * New plan :D
+ * Longest penetration = "which side to pick"
+ * Then longest vector out of there.
+ */
+
+let polyToPoly = (vec, p1, p2) => {
+  open Polygon;
+  p1.vertices
+  |> Array.to_list
+  |> List.map(point => {
+    Polygon.lines(p2) |> List.map(((p1, p2)) => pointToLine(vec, point, p1, p2))
+    /* pointToRect(vec, point, r2) */
+  })
+  |> List.concat
+  |> List.fold_left((a, b) => (snd(a) > snd(b) ? a : b), (v0, 0.))
+  |> fst
+};
+
+let _polyToPoly = (vec, poly1, poly2) => {
+  open Polygon;
+  Polygon.lines(poly2) |> List.map(((p1, p2)) => {
+    poly1.vertices
+    |> Array.to_list
+    |> List.map(point => {
+      /* pointToRect(vec, point, r2) */
+      pointToLine(vec, point, p1, p2)
+    })
+    |> List.fold_left(((a, a1), (b, b1)) => {
+      (a.magnitude > b.magnitude ? a : b, max(a1, b1))
+    }, (v0, 0.))
+  })
+  /* |> fail */
+  /* |> List.concat */
+  |> List.fold_left((a, b) => (snd(a) > snd(b) ? a : b), (v0, 0.))
+  |> fst
 };

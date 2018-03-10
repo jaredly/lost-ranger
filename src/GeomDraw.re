@@ -40,12 +40,10 @@ let aabb = ({Aabb.x0, y0, x1, y1}, env) => {
 let rect = ({Rect.pos: {x, y}, width, height, hw, hh}, env) =>
   Draw.rectf(~pos=(x -. hw, y -. hh), ~width, ~height, env);
 
-let polygon = ({Polygon.vertices}, env) => {
-  Array.iteri((i, p) => {
-    let i = i == 0 ? Array.length(vertices) - 1: i - 1;
-    let prev = vertices[i];
-    Draw.linef(~p1=tuple(prev), ~p2=tuple(p), env);
-  }, vertices)
+let polygon = (p, env) => {
+  List.iter(((p1, p2)) => {
+    line(p1, p2, env)
+  }, Polygon.lines(p))
 };
 
 let shape = shape => switch shape {
