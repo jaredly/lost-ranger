@@ -104,6 +104,12 @@ let collide = (rect, vel, blocks) => blockCollide(
   blocks
 ); */
 
+type worldObject('a) = {
+  vel: Geom.vector,
+  shape: Geom.Shape.t,
+  obj: 'a
+};
+
 module type MoveConfig = {
   let gravity: float;
   let friction: float;

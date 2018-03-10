@@ -477,4 +477,7 @@ let draw = (state, context, env) => {
   Reprocessing.Draw.text(~font=context.smallFont, ~body="Space to change character", ~pos=(w - 250, 30), env); */
 
   Reprocessing.Draw.noTint(env);
-}
+};
+
+let draw = GeomDebug.draw;
+

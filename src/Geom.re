@@ -34,6 +34,7 @@ type vector = {magnitude: float, theta: float};
 let v0 = {magnitude: 0., theta: 0.};
 type pector = {dx: float, dy: float};
 let p0 = {dx: 0., dy: 0.};
+let origin = {x: 0., y: 0.};
 
 let tuple = ({x, y}) => (x, y);
 let intTuple = ({x, y}) => (int_of_float(x), int_of_float(y));
@@ -61,6 +62,7 @@ let pectorToVector = (p) => {
   magnitude: pdist(p),
   theta: atan2(p.dy, p.dx)
 };
+let vectorBetweenPoints = (p1, p2) => pectorToVector(pdiff(p1, p2));
 let addPectors = (p1, p2) => {dx: p1.dx +. p2.dx, dy: p1.dy +. p2.dy};
 let clampVector = ({magnitude, theta}, maxMag) => {magnitude: min(maxMag, magnitude), theta};
 let addVectors = (v1, v2) => addPectors(vectorToPector(v1), vectorToPector(v2)) |> pectorToVector;
@@ -102,7 +104,7 @@ module Circle = {
   let testCircle = (c1, c2) => dist(c1.center, c2.center) <= c1.rad +. c2.rad;
   let vectorToCircle = (c1, c2) => {
     let magnitude = dist(c1.center, c2.center) -. c1.rad -. c2.rad;
-    {magnitude, theta: angleTo(c2.center, c1.center)}
+    {magnitude, theta: angleTo(c1.center, c2.center)}
   };
   /** based on http://www.jeffreythompson.org/collision-detection/poly-circle.php */
   let testLine = (c, p1, p2) => {
@@ -240,6 +242,13 @@ let minMag = items => switch items {
 | [first, ...rest] => List.fold_left((a, b) => (a.magnitude < b.magnitude ? a : b), first, rest)
 };
 
+let maxMag = items => switch items {
+| [] => v0
+| [first, ...rest] => List.fold_left((a, b) => (a.magnitude > b.magnitude ? a : b), first, rest)
+};
+
+let pythag = (hypotenous, side) => sqrt(hypotenous *. hypotenous -. side *. side);
+
 module Aabb = {
   type t = {x0: float, y0: float, x1: float, y1: float};
   let testPoint = ({x0, y0, x1, y1}, {x, y}) => {
@@ -249,7 +258,9 @@ module Aabb = {
 
   let init = (x0, y0, w, h) => {x0, y0, x1: x0 +. w, y1: y0 +. h};
   let translate = ({x0, y0, x1, y1}, {x, y}) => {x0: x0 +. x, x1: x1 +. x, y0: y0 +. y, y1: y1 +. y};
+  let ptranslate = ({x0, y0, x1, y1}, {dx, dy}) => {x0: x0 +. dx, x1: x1 +. dx, y0: y0 +. dy, y1: y1 +. dy};
   let fromPoint = ({x, y}) => {x0: x, y0: y, x1: x, y1: y};
+  let push = (r, v) => ptranslate(r, vectorToPector(v));
 
   let fromPoints = points => {
     Array.fold_left(
@@ -322,8 +333,6 @@ module Aabb = {
       }
     }
   };
-
-  let pythag = (hypotenous, side) => sqrt(hypotenous *. hypotenous -. side *. side);
 
   /* TODO get this working right */
   let collideToCircle = (vec, r, {Circle.center: {x, y}, rad} as c) => {
@@ -401,6 +410,8 @@ module Rect = {
   let ptranslate = (r, pector) => {...r, pos: addPectorToPoint(pector, r.pos)};
   let push = (r, vector) => {...r, pos: addVectorToPoint(vector, r.pos)};
   let aabb = ({pos: {x, y}, hw, hh}) => Aabb.{x0: x -. hw, x1: x +. hw, y0: y -. hh, y1: y +. hh};
+  let addMargin = (r, x, y) => {...r, width: r.width +. x *. 2., hw: r.hw +. x, height: r.height +. y *. 2., hh: r.hh +. y};
+  let fromAabb = ({Aabb.x0, y0, x1, y1}) => create({x: x0 +. (x1 -. x0) /. 2., y: y0 +. (y1 -. y0) /. 2.}, x1 -. x0, y1 -. y0);
   let testPoint = ({pos: {x, y}, hw, hh}, p) => {
     x -. hw <= p.x && p.x <= x +. hw &&
     y -. hh <= p.y && p.y <= y +. hh
@@ -417,6 +428,13 @@ module Rect = {
     r1.pos.y +. r1.hh > b.y0 &&
     r1.pos.y -. r1.hh < b.y1
   });
+  let sides = ({pos: {x, y}, hh, hw}) => {
+    let tl = {x: x -. hw, y: y -. hh};
+    let tr = {x: x +. hw, y: y -. hh};
+    let bl = {x: x -. hw, y: y +. hh};
+    let br = {x: x +. hw, y: y +. hh};
+    [(tl, tr), (tl, bl), (tr, br), (bl, br)]
+  };
   let vectorToRect = (r1, r2) => {
     let sides = [
       (r1.pos.x +. r1.hw -. (r2.pos.x -. r2.hw), pi),
@@ -530,11 +548,70 @@ module Polygon = {
   };
 };
 
-
-module Object = {
-  type shape =
+module Shape = {
+  type t =
     | Circle(Circle.t)
+    | Aabb(Aabb.t)
     | Rect(Rect.t)
     ;
-  type t = {shape, vel: vector};
+
+  let circle = c => Circle(c);
+  let aabb = a => Aabb(a);
+  let rect = r => Rect(r);
+
+  let center = shape => switch shape {
+  | Circle(c) => c.Circle.center
+  | Rect(r) => r.Rect.pos
+  | Aabb(a) => Rect.fromAabb(a).pos
+  };
+
+  let testShapes = (me, other) => {
+    switch (me, other) {
+    | (Circle(me), Circle(other)) => Circle.testCircle(me, other)
+    | (Aabb(me), Aabb(other)) => Aabb.testAabb(me, other)
+    | (Rect(me), Rect(other)) => Rect.testRect(me, other)
+
+    | (Circle(me), Aabb(other)) => Aabb.testCircle(other, me)
+    | (Aabb(me), Circle(other)) => Aabb.testCircle(me, other)
+
+    | (Rect(me), Circle(other)) => Rect.testCircle(me, other)
+    | (Circle(me), Rect(other)) => Rect.testCircle(other, me)
+
+    | (Aabb(me), Rect(other)) => Rect.testAabb(other, me)
+    | (Rect(me), Aabb(other)) => Rect.testAabb(me, other)
+    }
+  };
+
+  let collideToShape = (vel, me, other) => switch (me, other) {
+    | (Aabb(me), Aabb(other)) => Rect.collideToAabb(vel, Rect.fromAabb(me), other)
+    | (Circle(me), Circle(other)) => Circle.vectorToCircle(me, other)
+    | (Rect(me), Rect(other)) => Rect.collideToAabb(vel, me, Rect.aabb(other))
+
+    | (Circle(me), Aabb(other)) => Aabb.collideToCircle(vel, other, me)
+
+    | (Circle(me), Rect(other)) => Aabb.collideToCircle(vel, Rect.aabb(other), me)
+
+    | (Aabb(me), Rect(other)) => Rect.collideToAabb(vel, Rect.fromAabb(me), Rect.aabb(other))
+    | (Rect(me), Aabb(other)) => Rect.collideToAabb(vel, me, other)
+
+    /* Needs work */
+    | (Rect(me), Circle(other)) => Aabb.collideToCircle(vel, Rect.aabb(me), other) |> invertVector
+    | (Aabb(me), Circle(other)) => Aabb.collideToCircle(vel, me, other) |> invertVector
+  };
+
+  let translate = (shape, pt) => switch shape {
+  | Circle(c) => Circle(Circle.translate(c, pt))
+  | Rect(c) => Rect(Rect.translate(c, pt))
+  | Aabb(c) => Aabb(Aabb.translate(c, pt))
+  };
+
+  let push = (shape, vel) => switch shape {
+  | Circle(c) => Circle(Circle.push(c, vel))
+  | Rect(c) => Rect(Rect.push(c, vel))
+  | Aabb(c) => Aabb(Aabb.push(c, vel))
+  };
+};
+
+module Object = {
+  type t = {shape: Shape.t, vel: vector};
 };
