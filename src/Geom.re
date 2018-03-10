@@ -428,12 +428,20 @@ module Rect = {
     r1.pos.y +. r1.hh > b.y0 &&
     r1.pos.y -. r1.hh < b.y1
   });
+
+  /** Sides clockwise */
   let sides = ({pos: {x, y}, hh, hw}) => {
     let tl = {x: x -. hw, y: y -. hh};
     let tr = {x: x +. hw, y: y -. hh};
     let bl = {x: x -. hw, y: y +. hh};
     let br = {x: x +. hw, y: y +. hh};
-    [(tl, tr), (tl, bl), (tr, br), (bl, br)]
+    [
+      (tl, tr),
+      (tr, br),
+      (br, bl),
+      (bl, tl),
+    ]
+    /* [(tl, tr), (tl, bl), (tr, br), (bl, br)] */
   };
   let vectorToRect = (r1, r2) => {
     let sides = [

@@ -10,7 +10,7 @@ let range = x => {
 
 let mousePos = env => Geom.fromIntTuple(Env.mouse(env));
 
-let withAlpha = (alpha, color) => {...color, Reprocessing_Common.a: 0.1};
+let withAlpha = (alpha, color) => {...color, Reprocessing_Common.a: alpha};
 
 let drawResponse = (moving, target, vel, env) => {
   let moved = Geom.Shape.push(moving, vel);
@@ -62,7 +62,70 @@ let allShapes = (env) => {
 
 };
 
+let circleRectResponse = (env) => {
+  let circle = {Circle.center: mousePos(env), rad: 20.};
+
+  let rect = Geom.Rect.create({Geom.x: 400., y: 400.}, 200., 200.);
+  Draw.fill(withAlpha(0.1, Constants.green), env);
+  GeomDraw.rect(rect, env);
+  Draw.noFill(env);
+  Draw.stroke(withAlpha(0.2, Constants.black), env);
+  GeomDraw.rect(Rect.addMargin(rect, circle.rad, circle.rad), env);
+
+  angleRing(20) |> List.iter(theta => {
+    let vel = {Geom.magnitude: 150., theta};
+
+    let moved = Circle.push(circle, vel);
+    Draw.stroke(withAlpha(0.3, Constants.blue), env);
+    GeomDraw.vec(circle.Circle.center, vel, env);
+
+    Draw.fill(withAlpha(0.1, Constants.red), env);
+    GeomDraw.circle(moved, env);
+
+    Draw.noStroke(env);
+    if (Geom.Rect.testCircle(rect, moved)) {
+      Draw.noFill(env);
+      let response =  GeomCollide.circleToRect(vel, circle, rect);
+      Draw.stroke(Constants.blue, env);
+      GeomDraw.vec(moved.Circle.center, response, env);
+      let final = Circle.push(moved, response);
+      GeomDraw.circle(final, env);
+      Draw.noStroke(env);
+    };
+  });
+
+};
+
 let pointRectResponse = (env) => {
+  let point = mousePos(env);
+  let rect = Geom.Rect.create({Geom.x: 400., y: 400.}, 200., 200.);
+
+  let waggle = float_of_int(Reprocessing.Env.frameCount(env)) /. 50.;
+  /* let waggle = 1.; */
+  let vec = {Geom.magnitude: 150., theta: waggle /. 2.};
+
+  Draw.noFill(env);
+  Draw.strokeWeight(3, env);
+  Draw.stroke(withAlpha(0.2, Constants.black), env);
+
+  GeomDraw.rect(rect, env);
+  GeomDraw.vec(point, vec, env);
+
+  let response = GeomCollide.pointToRect(vec, point, rect);
+  GeomDraw.vec(Geom.addVectorToPoint(vec, point), response, env);
+
+  Rect.sides(rect) |> List.iter(((p1, p2)) => {
+    let response = GeomCollide.pointToLine(vec, point, p1, p2);
+    Draw.stroke(
+      response.magnitude > 0. ? Constants.green : Constants.red
+    , env);
+    /* GeomDraw.vec(Geom.addVectorToPoint(vec, point), response, env); */
+    GeomDraw.vec(p1, response, env);
+  });
+
+};
+
+let pointLineResponse = (env) => {
   let point = mousePos(env);
   /* let rect = Geom.Rect.create({Geom.x: 400., y: 400.}, 100., 100.); */
 
@@ -208,6 +271,7 @@ let draw = (state, context, env) => {
   let circle2 = {Geom.Circle.center: {x: 400., y: 400.}, rad: 100.};
 
   /* let spots = angleRing(20) |> List.map(theta => ({Geom.magnitude: 100., theta}, circle.Geom.Circle.center)); */
-  pointRectResponse(env);
+  /* pointRectResponse(env); */
+  circleRectResponse(env);
 
 };

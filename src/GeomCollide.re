@@ -61,17 +61,29 @@ let pointToLine = (vec, point, p1, p2) => {
     theta: vecToFirstPoint.theta -. vec.theta
   };
   let bd = Geom.vy(vecToP1RelativeToVec);
-  /** DANGER ZONE */
-  let angleDBC = (vecOfLine.theta -. vec.theta);
-  let distFromP1ToIntersection = bd /. cos(angleDBC);
-  if (distFromP1ToIntersection > vecOfLine.magnitude) {
-    /* Doesn't intersect the line */
-    v0
-  } else {
-    {
-      magnitude: Geom.vx(vecToP1RelativeToVec) +. distFromP1ToIntersection *. sin(angleDBC),
-      theta: vecOfLine.theta +. halfPi
+
+  let angleDBC = vecOfLine.theta -. vec.theta -. halfPi;
+
+  let distFromP1ToIntersection = -. bd /. cos(angleDBC);
+  if (distFromP1ToIntersection > 0. && distFromP1ToIntersection < vecOfLine.magnitude) {
+
+    let distToIntersection = Geom.vx(vecToP1RelativeToVec) -. distFromP1ToIntersection *. sin(angleDBC);
+    if (distToIntersection > vec.magnitude) {
+      v0
+    } else {
+
+      let distFromPenetrationToIntersection = vec.magnitude -. distToIntersection;
+      let vecFromIntersectionToPenetrationFromP1Perspective = {
+        magnitude: distFromPenetrationToIntersection,
+        theta: vec.theta -. vecOfLine.theta,
+      };
+      {
+        magnitude: Geom.vy(vecFromIntersectionToPenetrationFromP1Perspective),
+        theta: vecOfLine.theta -. halfPi
+      };
     }
+  } else {
+    v0
   }
 };
 
@@ -82,5 +94,8 @@ let pointToRect = (vec, point, rect) => {
 };
 
 let circleToRect = (vec, circle, rect) => {
-  pointToRect(vec, circle.Circle.center, Rect.addMargin(rect, circle.rad, circle.rad))
+  pointToRect(vec, circle.Circle.center,
+  /* rect */
+  Rect.addMargin(rect, circle.rad, circle.rad)
+  )
 };
