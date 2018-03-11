@@ -35,8 +35,8 @@ let start = (env) => {
   for (x in 0 to Play_draw.gameWidthInt - 1) {
     let change = Random.float(10.) > 4.;
     if (change && x > 2) {
-      let off = 5.;
-      /* let off = ceil(sqrt(Random.float(16.))); */
+      /* let off = 5.; */
+      let off = ceil(sqrt(Random.float(16.)));
       d := min(10, max(-10, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
     };
 
@@ -315,6 +315,11 @@ let collideStones = stones => {
   }, mutableStones)
 };
 
+let switchSkin = player => {
+  let skin = player.skin + 1;
+  {...player, skin, box: Play_draw.spriteBox(player.box.pos, skin, player.box.height)};
+};
+
 let step = (state, context, env) => {
   let userInput = getUserInput(state.userInput, env);
   let userInput = if (Reprocessing.Env.isTouchScreen(env)) {
@@ -336,8 +341,7 @@ let step = (state, context, env) => {
   let walkTimer = (userInput.left || userInput.right ? player.walkTimer +. Reprocessing.Env.deltaTime(env) : 0.);
   let (camera, player) = followPlayer(player, state.camera, gameWidth);
   let player = if (Reprocessing.Env.keyPressed(Reprocessing.Events.Space, env)) {
-    let skin = player.skin + 1;
-    {...player, skin, box: Play_draw.spriteBox(player.box.pos, skin, player.box.height)};
+    switchSkin(player)
   } else {
     player
   };
@@ -359,15 +363,18 @@ let touchStart = (state, ctx, env) => {
       switch (joystickButton(pos, env)) {
       | Some(_) => state
       | None => {
+        if (Geom.Rect.testPoint(Play_draw.spritePickerPos(env), Geom.fromIntTuple(Reprocessing.Env.mouse(env)))) {
+          {...state, player: switchSkin(state.player)}
+        } else {
+          let throw = Some((pos, Geom.v0, {
+            let size = Random.float(10.) +. 5.;
+            {Stone.vel: Geom.v0, circle: {Geom.Circle.rad: size, center: {Geom.x: 0., y: 0.}},
+              rotation: Random.float(Geom.tau),
+            }
+          }, id));
 
-        let throw = Some((pos, Geom.v0, {
-          let size = Random.float(10.) +. 5.;
-          {Stone.vel: Geom.v0, circle: {Geom.Circle.rad: size, center: {Geom.x: 0., y: 0.}},
-            rotation: Random.float(Geom.tau),
-          }
-        }, id));
-
-        {...state, player: {...state.player, throw}}
+          {...state, player: {...state.player, throw}}
+        }
       }
       }
     }

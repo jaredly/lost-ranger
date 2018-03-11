@@ -27,7 +27,6 @@ let drawStone = (context, pos, stone, env) => {
     -. Play_assets.Items.ore_coal_height *. scale /. 2.,
   ), ~flip=false, env);
   Draw.popMatrix(env);
-
 };
 
 let shoulder = -4.;
@@ -190,6 +189,10 @@ let spriteBox = (pos, skin, prevHeight) => {
   Geom.Rect.create(Geom.addPoints(pos, {Geom.x: 0., y: prevHeight /. 2. -.PlayerSprite.height /. 2.}), PlayerSprite.width, PlayerSprite.height)
 };
 
+let spritePickerPos = env => {
+  Geom.Rect.create({Geom.x: float_of_int(Env.width(env)) -. 30., y: 30.}, 30., 30.)
+};
+
 let rockPos = (state, v, env) => {
   let module PlayerSprite = (val PlayerSprites.getNum(state.player.skin): PlayerSprites.Sprite);
 
@@ -303,6 +306,25 @@ let drawPlayer = (state, context, env) => {
 
   Draw.popMatrix(env);
 
+};
+
+let drawSpritePicker = (state, context, env) => {
+  let module PlayerSprite = (val PlayerSprites.getNum(state.player.skin): PlayerSprites.Sprite);
+  let rect = spritePickerPos(env);
+
+  let scale = spriteScale *. 1.3;
+
+  let dx = -.PlayerSprite.head_rx *. scale;
+  let dy = -.PlayerSprite.head_height /. 2. *. scale;
+
+  PlayerSprite.head(
+    context.Shared.charSheet,
+    ~scale=scale,
+    /* ~flip=!state.player.facingLeft, */
+    ~flip=false,
+    ~pos=(Geom.tuple(rect.Geom.Rect.pos |> Geom.addPectorToPoint({Geom.dx, dy}))),
+    env
+  );
 };
 
 let drawWorld = (state, context, env) => {
@@ -477,6 +499,11 @@ let draw = (state, context, env) => {
   Reprocessing.Draw.text(~font=context.smallFont, ~body="Space to change character", ~pos=(w - 250, 30), env); */
 
   Reprocessing.Draw.noTint(env);
+  GeomDraw.rect(spritePickerPos(env), env);
+
+  drawSpritePicker(state, context, env);
+
+
 };
 
 /* let draw = GeomDebug.draw; */
