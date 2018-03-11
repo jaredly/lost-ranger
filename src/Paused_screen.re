@@ -27,8 +27,12 @@ let ui = (state, ctx, env) => UIManager.{
   align: Center,
   valign: Middle,
   el: VBox([
+    Text("Drag & release", {font: ctx.Shared.smallFont, tint: None}, Center),
+    Text("to throw", {font: ctx.Shared.smallFont, tint: None}, Center),
+    Spacer(5),
     Button("Resume", `Resume, buttonStyle(ctx)),
     Button("Restart", `Restart, buttonStyle(ctx)),
+    Spacer(5),
     Text("High score:", {
       font: ctx.Shared.smallFont,
       tint: None
