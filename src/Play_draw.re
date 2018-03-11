@@ -505,5 +505,12 @@ let draw = (state, context, env) => {
   Reprocessing.Draw.noTint(env);
 
   drawSpritePicker(state, context, env);
-  GeomDraw.rect(pauseButton(env), env);
+  /* GeomDraw.rect(pauseButton(env), env); */
+
+  let pause = pauseButton(env);
+  let bar = Geom.Rect.scale(pause, 0.3, 1.);
+  let left = Geom.Rect.translate(bar, {Geom.x: pause.Geom.Rect.width /. 4., y: 0.});
+  let right = Geom.Rect.translate(bar, {Geom.x: -.pause.Geom.Rect.width /. 4., y: 0.});
+  GeomDraw.rect(left, env);
+  GeomDraw.rect(right, env);
 };

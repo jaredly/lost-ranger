@@ -410,6 +410,7 @@ module Rect = {
   let translate = (r, pos) => {...r, pos: addPoints(r.pos, pos)};
   let ptranslate = (r, pector) => {...r, pos: addPectorToPoint(pector, r.pos)};
   let push = (r, vector) => {...r, pos: addVectorToPoint(vector, r.pos)};
+  let scale = (r, xs, ys) => {...r, width: r.width *. xs, height: r.height *. ys, hh: r.hh *. ys, hw: r.hw *. xs};
   let aabb = ({pos: {x, y}, hw, hh}) => Aabb.{x0: x -. hw, x1: x +. hw, y0: y -. hh, y1: y +. hh};
   let addMargin = (r, x, y) => {...r, width: r.width +. x *. 2., hw: r.hw +. x, height: r.height +. y *. 2., hh: r.hh +. y};
   let fromAabb = ({Aabb.x0, y0, x1, y1}) => create({x: x0 +. (x1 -. x0) /. 2., y: y0 +. (y1 -. y0) /. 2.}, x1 -. x0, y1 -. y0);
