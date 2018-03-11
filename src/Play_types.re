@@ -108,6 +108,8 @@ type state = {
   looseFruit: list(Fruit.t),
   stones: list(Stone.t),
   camera: (float, float, float, float),
+  lastSavedHighScore: int,
+  paused: bool,
   userInput,
   player
 };

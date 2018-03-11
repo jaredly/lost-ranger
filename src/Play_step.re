@@ -21,6 +21,28 @@ let followPlayer = (player, (a, b, w, h), gameWidth) => {
 
 let gameWidth = Play_draw.gameWidth;
 
+let storageKey = "throw-rocks";
+
+let maybeSave = (state, env) => {
+  let num = List.length(state.stones);
+  if (state.lastSavedHighScore < num) {
+    if (Reprocessing.Env.saveUserData(~key=storageKey, ~value=num, env)) {
+      {...state, lastSavedHighScore: num}
+    } else {
+      state
+    }
+  } else {
+    state
+  }
+};
+
+let tryLoadingHighScore = env => {
+  switch (Reprocessing.Env.loadUserData(~key=storageKey, env)) {
+  | None => 0
+  | Some(num) => num
+  }
+};
+
 let start = (env) => {
   let width = Reprocessing.Env.width(env) |> float_of_int;
   let height = Reprocessing.Env.height(env) |> float_of_int;
@@ -90,6 +112,8 @@ let start = (env) => {
     blocks,
     looseFruit: [],
     stones: [],
+    paused: false,
+    lastSavedHighScore: tryLoadingHighScore(env),
     userInput: {
       left: false, right: false, jump: false, action: false,
     },
@@ -226,11 +250,18 @@ let collideStones = stones => {
     let {Geom.Circle.center: {Geom.x}, rad} = moved;
     let leftBox = (x -. rad) /. boxWidth |> floor |> int_of_float;
     let leftBox = leftBox == -1 ? boxes - 1 : leftBox;
+    let leftBox = leftBox >= boxes ? 0 : leftBox;
     let rightBox = (x +. rad) /. boxWidth |> floor |> int_of_float;
+    let rightBox = rightBox == -1 ? boxes - 1 : rightBox;
+    let rightBox = rightBox >= boxes ? 0 : rightBox;
     broad[leftBox] = [stoneRef, ...broad[leftBox]];
     if (leftBox != rightBox) {
-      let rightBox = rightBox >= boxes ? 0 : rightBox;
-      broad[rightBox] = [stoneRef, ...broad[rightBox]];
+      /* let rightBox = rightBox >= boxes ? 0 : rightBox; */
+      /* if (rightBox < boxes && rightBox >= 0) { */
+        broad[rightBox] = [stoneRef, ...broad[rightBox]];
+      /* } else { */
+        /* print_endline("Bad boxes: " ++ string_of_int(rightBox)) */
+      /* } */
     };
   }, mutableStones);
   let pairHash = Hashtbl.create(100);
@@ -345,12 +376,27 @@ let step = (state, context, env) => {
   } else {
     player
   };
+
+  let state = if (Reprocessing.Env.frameCount(env) mod 100 == 0) {
+    maybeSave(state, env)
+  } else {
+    state
+  };
+
   {
     ...state,
     userInput,
     stones,
     camera,
     player: {...player, facingLeft, walkTimer}
+  }
+};
+
+let step = (state, context, env) => {
+  if (state.paused) {
+    state
+  } else {
+    step(state, context, env)
   }
 };
 
@@ -365,6 +411,8 @@ let touchStart = (state, ctx, env) => {
       | None => {
         if (Geom.Rect.testPoint(Play_draw.spritePickerPos(env), Geom.fromIntTuple(Reprocessing.Env.mouse(env)))) {
           {...state, player: switchSkin(state.player)}
+        } else if (Geom.Rect.testPoint(Play_draw.pauseButton(env), Geom.fromIntTuple(Reprocessing.Env.mouse(env)))) {
+          {...state, paused: true}
         } else {
           let throw = Some((pos, Geom.v0, {
             let size = Random.float(10.) +. 5.;
@@ -380,6 +428,14 @@ let touchStart = (state, ctx, env) => {
     }
     }
   }, state, Reprocessing.Env.changedTouches(env))
+};
+
+let touchStart = (state, ctx, env) => {
+  if (state.paused) {
+    state
+  } else {
+    touchStart(state, ctx, env)
+  }
 };
 
 let touchMove = (state, ctx, env) => {

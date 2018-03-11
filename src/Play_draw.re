@@ -193,6 +193,10 @@ let spritePickerPos = env => {
   Geom.Rect.create({Geom.x: float_of_int(Env.width(env)) -. 30., y: 30.}, 30., 30.)
 };
 
+let pauseButton = env => {
+  Geom.Rect.create({Geom.x: float_of_int(Env.width(env)) -. 80., y: 30.}, 30., 30.)
+};
+
 let rockPos = (state, v, env) => {
   let module PlayerSprite = (val PlayerSprites.getNum(state.player.skin): PlayerSprites.Sprite);
 
@@ -499,12 +503,7 @@ let draw = (state, context, env) => {
   Reprocessing.Draw.text(~font=context.smallFont, ~body="Space to change character", ~pos=(w - 250, 30), env); */
 
   Reprocessing.Draw.noTint(env);
-  GeomDraw.rect(spritePickerPos(env), env);
 
   drawSpritePicker(state, context, env);
-
-
+  GeomDraw.rect(pauseButton(env), env);
 };
-
-/* let draw = GeomDebug.draw; */
-
