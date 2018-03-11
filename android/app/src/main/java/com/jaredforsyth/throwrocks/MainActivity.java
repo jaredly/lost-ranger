@@ -1,4 +1,4 @@
-package com.jaredforsyth.purplemaze;
+package com.jaredforsyth.throwrocks;
 
 import com.jaredforsyth.reasongl.ReasonglActivity;
 
