@@ -190,11 +190,11 @@ let spriteBox = (pos, skin, prevHeight) => {
 };
 
 let spritePickerPos = env => {
-  Geom.Rect.create({Geom.x: float_of_int(Env.width(env)) -. 30., y: 30.}, 30., 30.)
+  Geom.Rect.create({Geom.x: float_of_int(Env.width(env)) -. 30., y: 30.}, 50., 60.)
 };
 
 let pauseButton = env => {
-  Geom.Rect.create({Geom.x: float_of_int(Env.width(env)) -. 80., y: 30.}, 30., 30.)
+  Geom.Rect.create({Geom.x: float_of_int(Env.width(env)) -. 80., y: 30.}, 50., 60.)
 };
 
 let rockPos = (state, v, env) => {
