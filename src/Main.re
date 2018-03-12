@@ -15,7 +15,10 @@ let setup = (assetDir, env) => {
     } else {
       Reprocessing.Env.size(~width=800, ~height=800, env);
     };
+  } else {
+    Reprocessing.Env.resizeable(true, env);
   };
+    Reprocessing.Env.resizeable(true, env);
 
   /* Random.init(100); */
   let height = Reprocessing.Env.height(env) |> float_of_int;

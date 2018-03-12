@@ -63,7 +63,7 @@ let start = (env) => {
     };
 
     /** For debugging the wall-sticking bug */
-    if (x == 0) {
+    /* if (x == 0) {
       d := 0
     } else if (x == 1) {
       d := -2
@@ -71,7 +71,7 @@ let start = (env) => {
       d := -4
     } else if (x == 3) {
       d := -4
-    };
+    }; */
 
     if (x mod int_of_float(800. /. blockSize) == 0) {
       textPositions := [{Geom.y: float_of_int(ground + d^ + (x == 0 ? 1 : 3)) *. blockSize, x: float_of_int(x) *. blockSize}, ...textPositions^]
@@ -410,6 +410,16 @@ let step = (state, context, env) => {
 };
 
 let step = (state, context, env) => {
+  /* Handle resize */
+  let state = {
+    let (x, y, w, h) = state.camera;
+    open Reprocessing;
+    if (Env.width(env) != int_of_float(w) || Env.height(env) != int_of_float(h)) {
+      {...state, camera: (x, y, float_of_int(Env.width(env)), float_of_int(Env.height(env)))}
+    } else {
+      state
+    }
+  };
   let state = Reprocessing.Env.keyPressed(Reprocessing.Events.Z, env)
     ? {...state, zoom: !state.zoom}
     : state;

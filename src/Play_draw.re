@@ -228,7 +228,6 @@ let drawPlayer = (state, context, env) => {
   let module PlayerSprite = (val PlayerSprites.getNum(state.player.skin): PlayerSprites.Sprite);
   let y = y -. 10. +. PlayerSprite.top;
 
-  /* Legs */
   let amp = Geom.halfPi /. 2.;
   let amp = abs_float(Geom.vx(state.player.vel)) > 0.001 ? amp : 0.;
   let walk = sin(state.player.walkTimer *. 10.) *. amp;
@@ -237,14 +236,6 @@ let drawPlayer = (state, context, env) => {
     let amp = min(5., abs_float(Geom.vx(state.player.vel))) /. 5.;
     (Geom.halfPi *. amp /. 2., -. Geom.halfPi *. amp /. 2.)
   };
-  Draw.pushMatrix(env);
-  Draw.translate(~x, ~y=y +. PlayerSprite.body_height *. spriteScale /. 2. +. 5., env);
-  Draw.rotate(walk, env);
-  PlayerSprite.leg(context.Shared.charSheet, ~scale=spriteScale, ~pos=(-.PlayerSprite.leg_width *. spriteScale /. 2., 0.), ~flip=false, env);
-  Draw.rotate(-.walk +. walk2, env);
-  PlayerSprite.leg(context.Shared.charSheet, ~scale=spriteScale, ~pos=(-.PlayerSprite.leg_width *. spriteScale /. 2., 0.), ~flip=false, env);
-  Draw.popMatrix(env);
-
 
   /* arm behind */
   let loff = state.player.facingLeft ? 1. : -1.;
@@ -254,6 +245,16 @@ let drawPlayer = (state, context, env) => {
   Draw.rotate(state.player.facingLeft ? walk/.2. : walk2/.2., env);
   PlayerSprite.arm(context.Shared.charSheet, ~scale=spriteScale, ~pos=(-.PlayerSprite.arm_width *. spriteScale /. 2., 0.), ~flip=false, env);
   Draw.popMatrix(env);
+
+  /* Legs */
+  Draw.pushMatrix(env);
+  Draw.translate(~x, ~y=y +. PlayerSprite.body_height *. spriteScale /. 2. +. 5., env);
+  Draw.rotate(walk, env);
+  PlayerSprite.leg(context.Shared.charSheet, ~scale=spriteScale, ~pos=(-.PlayerSprite.leg_width *. spriteScale /. 2., 0.), ~flip=false, env);
+  Draw.rotate(-.walk +. walk2, env);
+  PlayerSprite.leg(context.Shared.charSheet, ~scale=spriteScale, ~pos=(-.PlayerSprite.leg_width *. spriteScale /. 2., 0.), ~flip=false, env);
+  Draw.popMatrix(env);
+
 
 
 
@@ -404,19 +405,20 @@ let drawWorld = (state, context, env) => {
   let (dx, dy, w, h) = state.camera;
 
   /* let zoom = 5.; */
-  let zoom = state.zoom ? 5. : 1.;
+  let zoom = state.zoom ? 4. : 1.;
   Draw.translate(~x=-.dx *. zoom, ~y=-.dy *. zoom, env);
 
   if (state.zoom) {
     let mpos = Geom.fromIntTuple(Env.mouse(env));
+    let mpos = {Geom.x: w /. 2. -. w /. 8., y: h /. 2. -. h /. 8.};
     Draw.translate(~x=-.mpos.x*.zoom, ~y=-.mpos.y *. zoom, env);
     Draw.scale(~x=zoom, ~y=zoom, env);
   };
 
   let x0 = int_of_float(dx /. blockSize) - 1;
   let y0 = int_of_float(dy /. blockSize);
-  let ww = int_of_float(w /. blockSize) + 1;
-  let hh = int_of_float(h /. blockSize);
+  let ww = int_of_float(w /. blockSize) + 3;
+  let hh = int_of_float(h /. blockSize) + 3;
   for (x in x0 to x0 + ww) {
     for (y in y0 to y0 + hh) {
       switch (getBlock(state.blocks, (x, y))) {
