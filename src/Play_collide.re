@@ -136,6 +136,8 @@ let module Mover = (Config: MoveConfig) => {
 
 let testRect = (rect, move, aabb) => Geom.Rect.testAabb(Geom.Rect.ptranslate(rect, move), aabb);
 let collideRect = (rect, vel, move, aabb) => Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb);
+/* let collideRect = (rect, vel, move, aabb) => GeomCollide.rectToRect(vel, rect, Geom.Rect.fromAabb(aabb)); */
+/* Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb); */
 /* let collideRect = (rect, vel, move, aabb) => {
   let res = GeomCollide.rectToRect(vel, Geom.Rect.ptranslate(rect, move), Geom.Rect.fromAabb(aabb));
   let res = Geom.scaleVector(res, 0.5);

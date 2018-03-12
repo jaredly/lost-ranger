@@ -62,6 +62,17 @@ let start = (env) => {
       d := min(10, max(-ground + 1, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
     };
 
+    /** For debugging the wall-sticking bug */
+    if (x == 0) {
+      d := 0
+    } else if (x == 1) {
+      d := -2
+    } else if (x == 2) {
+      d := -4
+    } else if (x == 3) {
+      d := -4
+    };
+
     if (x mod int_of_float(800. /. blockSize) == 0) {
       textPositions := [{Geom.y: float_of_int(ground + d^ + (x == 0 ? 1 : 3)) *. blockSize, x: float_of_int(x) *. blockSize}, ...textPositions^]
     };
@@ -405,6 +416,7 @@ let step = (state, context, env) => {
 
 let touchStart = (state, ctx, env) => {
   List.fold_left((state, (id, x, y)) => {
+    /* Capi.logAndroid("Changed touch - start " ++ string_of_float(id) ++ " " ++ string_of_float(x) ++ ", " ++ string_of_float(y)); */
     let pos = {Geom.x, y};
     switch state.player.throw {
     | Some(_) => state

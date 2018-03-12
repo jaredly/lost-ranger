@@ -337,7 +337,12 @@ let drawWorld = (state, context, env) => {
 
   let (dx, dy, w, h) = state.camera;
 
-  Draw.translate(~x=-.dx, ~y=-.dy, env);
+  let zoom = 5.;
+  Draw.translate(~x=-.dx *. zoom, ~y=-.dy *. zoom, env);
+
+  let mpos = Geom.fromIntTuple(Env.mouse(env));
+  Draw.translate(~x=-.mpos.x*.zoom, ~y=-.mpos.y *. zoom, env);
+  Draw.scale(~x=zoom, ~y=zoom, env);
 
   let x0 = int_of_float(dx /. blockSize) - 1;
   let y0 = int_of_float(dy /. blockSize);
@@ -514,7 +519,7 @@ let draw = (state, context, env) => {
   GeomDraw.rect(left, env);
   GeomDraw.rect(right, env);
 
-  Draw.noFill(env);
+  /* Draw.noFill(env);
   Draw.stroke(Constants.black, env);
   Draw.tint(Constants.black, env);
   Hashtbl.iter((k, v) => {
@@ -525,5 +530,5 @@ let draw = (state, context, env) => {
       int_of_float(y),
     ), env)
   }, Env.touches(env));
-  Draw.noTint(env);
+  Draw.noTint(env); */
 };
