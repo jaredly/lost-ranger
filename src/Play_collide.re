@@ -19,6 +19,12 @@ let fifteenbox = [
   (-1, -2)
 ];
 
+let below = [
+  (0, 1),
+  (-1, 1),
+  (1, 1)
+];
+
 let blockCollision = (center, check, blocks) => {
   let x = int_of_float(center.Geom.x /. blockSize);
   let y = int_of_float(center.Geom.y /. blockSize);
@@ -36,11 +42,28 @@ let blockCollision = (center, check, blocks) => {
   )
 };
 
+let blockCollisionBelow = (center, check, blocks) => {
+  let x = int_of_float(center.Geom.x /. blockSize);
+  let y = int_of_float(center.Geom.y /. blockSize);
+  List.exists(
+    ((dx, dy)) => {
+      let x = x + dx; let y = y + dy;
+      if (hasBlock(blocks, (x,y))) {
+        let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
+        check(blockBox)
+      } else {
+        false
+      }
+    },
+    below
+  )
+};
+
 let blockCollide = (center, vel, bounce, check, getCollisionVector, blocks) => {
   let x = int_of_float(center.Geom.x /. blockSize);
   let y = int_of_float(center.Geom.y /. blockSize);
   List.fold_left(
-    ((moved, vel), (dx, dy)) => {
+    ((moved, vel, hits), (dx, dy)) => {
       let x = x + dx; let y = y + dy;
       if (hasBlock(blocks, (x,y))) {
         let blockBox = Geom.Aabb.init(float_of_int(x) *. blockSize, float_of_int(y) *. blockSize, blockSize, blockSize);
@@ -55,18 +78,18 @@ let blockCollide = (center, vel, bounce, check, getCollisionVector, blocks) => {
             {...add, magnitude: add.magnitude -. amount}
           } : add;
           let vel = bounce ? Geom.scaleVector(vel, 0.95) : vel; */
-          let vel = Geom.addVectors(add, vel);
-          (Geom.vectorToPector(vel), vel)
+          let newVel = Geom.addVectors(add, vel);
+          (Geom.vectorToPector(newVel), newVel, [(vel, newVel, (x, y), moved, blockBox), ...hits])
         } else {
-          (moved, vel)
+          (moved, vel, hits)
         }
       } else {
-        (moved, vel)
+        (moved, vel, hits)
       }
     },
-    (Geom.vectorToPector(vel), vel),
+    (Geom.vectorToPector(vel), vel, []),
     fifteenbox
-  ) |> snd
+  ) |> ((moved, vel, hits)) => (vel, hits)
 };
 
 let incPoint = blockSize /. 2.;
@@ -76,15 +99,15 @@ let incrementalCollide = (center, vel, bounce, check, getCollisionVector, blocks
     let stepSize = vel.Geom.magnitude /. float_of_int(steps);
     let rec loop = (i) => {
       if (i > steps) {
-        vel
+        (vel, [])
       } else {
         let fi = float_of_int(i);
         let v = Geom.{magnitude: fi *. stepSize, theta: vel.theta};
-        let res = blockCollide(center, v, bounce, check, getCollisionVector, blocks);
+        let (res, hits) = blockCollide(center, v, bounce, check, getCollisionVector, blocks);
         if (res == v) {
           loop(i + 1)
         } else {
-          res
+          (res, hits)
         }
       }
     };
@@ -121,7 +144,7 @@ module type MoveConfig = {
 let module Mover = (Config: MoveConfig) => {
   let moveObject = (pos, vel, acc, jumping, checkCollision, vecToCollision, blocks) => {
     let groundShift = {Geom.dx: 0., dy: 0.1};
-    let isOnGround = abs_float(Geom.vy(vel)) < 0.01 && blockCollision(Geom.addPectorToPoint(groundShift, pos), checkCollision(groundShift), blocks);
+    let isOnGround = abs_float(Geom.vy(vel)) < 0.01 && blockCollisionBelow(Geom.addPectorToPoint(groundShift, pos), checkCollision(groundShift), blocks);
     let vel = isOnGround
       ? (acc === Geom.v0 ? Geom.scaleVector(vel, Config.friction) : vel)
       : Geom.addVectors(Geom.{magnitude: Config.gravity, theta: pi /. 2.}, vel);

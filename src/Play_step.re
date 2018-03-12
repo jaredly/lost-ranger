@@ -158,7 +158,7 @@ let movePlayer = (userInput, player, blocks) => {
   let acc = userInput.left ? (vx > -. maxWalk ? Geom.{magnitude: walkSpeed, theta: pi} : Geom.v0) : (
     userInput.right ? (vx < maxWalk ? Geom.{magnitude: walkSpeed, theta: 0.} : Geom.v0) : Geom.v0
   );
-  let (isOnGround, vel) = MovePlayer.moveObject(player.box.pos, player.vel, acc, userInput.jump, Play_collide.testRect(player.box), Play_collide.collideRect(player.box), blocks);
+  let (isOnGround, (vel, hits)) = MovePlayer.moveObject(player.box.pos, player.vel, acc, userInput.jump, Play_collide.testRect(player.box), Play_collide.collideRect(player.box), blocks);
   {...player, vel, box: Geom.Rect.push(player.box, vel), isOnGround}
 };
 
@@ -168,7 +168,7 @@ let wrap = ({Geom.x, y}, gameWidth) => {Geom.x: wrapX(x, gameWidth), y};
 
 let moveStone = (stone, otherStones, blocks) => {
   open! Stone;
-  let (_, vel) = MoveStone.moveObject(
+  let (_, (vel, _)) = MoveStone.moveObject(
     stone.circle.center,
     stone.vel,
     Geom.v0,

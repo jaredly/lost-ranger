@@ -331,18 +331,58 @@ let drawSpritePicker = (state, context, env) => {
   );
 };
 
+let maxWalk = 5.;
+let walkSpeed = 0.5;
+
+let module MovePlayer = Play_collide.Mover({
+  let gravity = 0.5;
+  let friction = 0.7;
+  let jump = 11.;
+  let bounce = false;
+});
+
+let debugPlayerHits = ({player,userInput, blocks}, contex, env) => {
+  let vx = Geom.vx(player.vel);
+  let acc = userInput.left ? (vx > -. maxWalk ? Geom.{magnitude: walkSpeed, theta: pi} : Geom.v0) : (
+    userInput.right ? (vx < maxWalk ? Geom.{magnitude: walkSpeed, theta: 0.} : Geom.v0) : Geom.v0
+  );
+  let (isOnGround, (vel, hits)) = MovePlayer.moveObject(player.box.pos, player.vel, acc, userInput.jump, Play_collide.testRect(player.box), Play_collide.collideRect(player.box), blocks);
+  Draw.stroke(Constants.white, env);
+  Draw.noFill(env);
+  if (isOnGround) {
+    GeomDraw.rect(player.box, env)
+  };
+  Draw.strokeWeight(1, env);
+  List.iteri(
+    (i, (oldVel, newVel, blockPos, playerMoved, blockBox)) => {
+      Draw.stroke(Constants.white, env);
+      GeomDraw.aabb(blockBox, env);
+      let pos = Geom.addPectorToPoint({Geom.dx: 0., dy: 2. *. (float_of_int(i))}, player.box.pos);
+      GeomDraw.vec(pos, Geom.scaleVector(oldVel, 10.), env);
+      Draw.stroke(Constants.red, env);
+      GeomDraw.vec(
+        Geom.addPectorToPoint({Geom.dx: 0., dy: 1.}, pos),
+        Geom.scaleVector(newVel, 10.),
+        env)
+    },
+    hits
+  );
+
+};
+
 let drawWorld = (state, context, env) => {
   Draw.background(Utils.color(~r=200, ~g=230, ~b=255, ~a=255), env);
   /* Draw.background(Constants.white, env); */
 
   let (dx, dy, w, h) = state.camera;
 
-  let zoom = 5.;
+  /* let zoom = 5.; */
+  let zoom = 1.;
   Draw.translate(~x=-.dx *. zoom, ~y=-.dy *. zoom, env);
 
-  let mpos = Geom.fromIntTuple(Env.mouse(env));
+  /* let mpos = Geom.fromIntTuple(Env.mouse(env));
   Draw.translate(~x=-.mpos.x*.zoom, ~y=-.mpos.y *. zoom, env);
-  Draw.scale(~x=zoom, ~y=zoom, env);
+  Draw.scale(~x=zoom, ~y=zoom, env); */
 
   let x0 = int_of_float(dx /. blockSize) - 1;
   let y0 = int_of_float(dy /. blockSize);
@@ -434,6 +474,8 @@ let drawWorld = (state, context, env) => {
     }
   });
 
+
+  /* debugPlayerHits(state, context, env); */
 };
 
 let touchButtons = env => {
