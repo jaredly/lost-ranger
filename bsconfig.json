@@ -30,5 +30,5 @@
   "icon": "./icons/icon.png",
   "appName": "ThrowRocks",
   "iosPathName": "App",
-  "androidPackage": "com.jaredforsyth.throw-rocks",
+  "androidPackage": "com.jaredforsyth.throwrocks",
 }

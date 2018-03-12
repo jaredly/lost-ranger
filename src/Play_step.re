@@ -59,7 +59,7 @@ let start = (env) => {
     if (change && x > 2) {
       /* let off = 5.; */
       let off = ceil(sqrt(Random.float(16.)));
-      d := min(10, max(-10, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
+      d := min(10, max(-ground + 1, d^ + Random.int(int_of_float(off)) - (int_of_float(off /. 2.))));
     };
 
     if (x mod int_of_float(800. /. blockSize) == 0) {
@@ -70,6 +70,9 @@ let start = (env) => {
     };
 
     for (y in d^ to 50) {
+      if (ground + y > Array.length(blocks) || ground + y < 0) {
+        failwith("bad place " ++ string_of_int(ground + y));
+      };
       blocks[ground + y][x] = Some(Block.init(Block.Dirt, y == d^));
     };
   };

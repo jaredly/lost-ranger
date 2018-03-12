@@ -513,4 +513,17 @@ let draw = (state, context, env) => {
   let right = Geom.Rect.translate(bar, {Geom.x: -.pause.Geom.Rect.width /. 4., y: 0.});
   GeomDraw.rect(left, env);
   GeomDraw.rect(right, env);
+
+  Draw.noFill(env);
+  Draw.stroke(Constants.black, env);
+  Draw.tint(Constants.black, env);
+  Hashtbl.iter((k, v) => {
+    GeomDraw.circle({Geom.Circle.center: Geom.fromTuple(v), rad: 20.}, env);
+    let (x,y) = v;
+    Draw.text(~font=context.smallFont, ~body=string_of_float(k), ~pos=(
+      int_of_float(x +. 30.),
+      int_of_float(y),
+    ), env)
+  }, Env.touches(env));
+  Draw.noTint(env);
 };
