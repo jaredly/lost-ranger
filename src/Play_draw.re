@@ -341,12 +341,13 @@ let module MovePlayer = Play_collide.Mover({
   let bounce = false;
 });
 
-let debugPlayerHits = ({player,userInput, blocks}, contex, env) => {
+let debugPlayerHits = ({player,userInput, blocks, hitByHit}, context, env) => {
   let vx = Geom.vx(player.vel);
   let acc = userInput.left ? (vx > -. maxWalk ? Geom.{magnitude: walkSpeed, theta: pi} : Geom.v0) : (
     userInput.right ? (vx < maxWalk ? Geom.{magnitude: walkSpeed, theta: 0.} : Geom.v0) : Geom.v0
   );
   let (isOnGround, (vel, hits)) = MovePlayer.moveObject(player.box.pos, player.vel, acc, userInput.jump, Play_collide.testRect(player.box), Play_collide.collideRect(player.box), blocks);
+  /* let (isOnGround2, (vel2, hits2)) = MovePlayer.moveObject(player.box.pos, player.vel, acc, userInput.jump, Play_collide.testRect(player.box), Play_collide.collideRectOld(player.box), blocks); */
   Draw.stroke(Constants.white, env);
   Draw.noFill(env);
   if (isOnGround) {
@@ -355,18 +356,44 @@ let debugPlayerHits = ({player,userInput, blocks}, contex, env) => {
   Draw.strokeWeight(1, env);
   List.iteri(
     (i, (oldVel, newVel, blockPos, playerMoved, blockBox)) => {
-      Draw.stroke(Constants.white, env);
+      switch hitByHit {
+      | Some(index) when index mod List.length(hits) != i => ()
+      | _ => {
+        if (hitByHit != None) {
+          Draw.text(~font=context.Shared.smallFont, ~body="hi", ~pos=Geom.intTuple(player.box.pos), env);
+        };
+
+        Draw.stroke(Constants.white, env);
+        GeomDraw.aabb(blockBox, env);
+        let pos = Geom.addPectorToPoint({Geom.dx: 2. *. (float_of_int(i)), dy: 2. *. (float_of_int(i))}, player.box.pos);
+        GeomDraw.vec(pos, Geom.scaleVector(oldVel, 1.), env);
+        Draw.stroke(Constants.red, env);
+        GeomDraw.rect(Geom.Rect.ptranslate(player.box, playerMoved), env);
+        GeomDraw.vec(
+          Geom.addPectorToPoint({Geom.dx: 1., dy: 1.}, pos),
+          Geom.scaleVector(newVel, 1.),
+          env)
+      }
+
+      }
+    },
+    hits |> List.rev
+  );
+
+  /* List.iteri(
+    (i, (oldVel, newVel, blockPos, playerMoved, blockBox)) => {
+      Draw.stroke(Constants.green, env);
       GeomDraw.aabb(blockBox, env);
-      let pos = Geom.addPectorToPoint({Geom.dx: 0., dy: 2. *. (float_of_int(i))}, player.box.pos);
-      GeomDraw.vec(pos, Geom.scaleVector(oldVel, 10.), env);
-      Draw.stroke(Constants.red, env);
+      let pos = Geom.addPectorToPoint({Geom.dx: 10. +. 2. *. (float_of_int(i)), dy: 10. +. 2. *. (float_of_int(i))}, player.box.pos);
+      GeomDraw.vec(pos, Geom.scaleVector(oldVel, 1.), env);
+      Draw.stroke(Constants.blue, env);
       GeomDraw.vec(
-        Geom.addPectorToPoint({Geom.dx: 0., dy: 1.}, pos),
-        Geom.scaleVector(newVel, 10.),
+        Geom.addPectorToPoint({Geom.dx: 1., dy: 1.}, pos),
+        Geom.scaleVector(newVel, 1.),
         env)
     },
-    hits
-  );
+    hits2 |> List.rev
+  ); */
 
 };
 
@@ -377,12 +404,14 @@ let drawWorld = (state, context, env) => {
   let (dx, dy, w, h) = state.camera;
 
   /* let zoom = 5.; */
-  let zoom = 1.;
+  let zoom = state.zoom ? 5. : 1.;
   Draw.translate(~x=-.dx *. zoom, ~y=-.dy *. zoom, env);
 
-  /* let mpos = Geom.fromIntTuple(Env.mouse(env));
-  Draw.translate(~x=-.mpos.x*.zoom, ~y=-.mpos.y *. zoom, env);
-  Draw.scale(~x=zoom, ~y=zoom, env); */
+  if (state.zoom) {
+    let mpos = Geom.fromIntTuple(Env.mouse(env));
+    Draw.translate(~x=-.mpos.x*.zoom, ~y=-.mpos.y *. zoom, env);
+    Draw.scale(~x=zoom, ~y=zoom, env);
+  };
 
   let x0 = int_of_float(dx /. blockSize) - 1;
   let y0 = int_of_float(dy /. blockSize);
@@ -574,3 +603,5 @@ let draw = (state, context, env) => {
   }, Env.touches(env));
   Draw.noTint(env); */
 };
+
+/* let draw = GeomDebug.draw; */

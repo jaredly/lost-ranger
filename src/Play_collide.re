@@ -159,7 +159,22 @@ let module Mover = (Config: MoveConfig) => {
 
 let testRect = (rect, move, aabb) => Geom.Rect.testAabb(Geom.Rect.ptranslate(rect, move), aabb);
 let collideRect = (rect, vel, move, aabb) => Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb);
-/* let collideRect = (rect, vel, move, aabb) => GeomCollide.rectToRect(vel, rect, Geom.Rect.fromAabb(aabb)); */
+
+/* let collideRectOld = (rect, vel, move, aabb) => Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb);
+
+let collideRect = (rect, vel, move, aabb) => {
+  let delta = GeomCollide.rectToRect(vel, rect, Geom.Rect.fromAabb(aabb));
+  if (abs_float(delta.Geom.magnitude) > abs_float(vel.Geom.magnitude) *. 1.1) {
+    Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb);
+  } else {
+
+  /* let delta = GeomCollide.rectToRect(vel, Geom.Rect.ptranslate(rect, move), Geom.Rect.fromAabb(aabb)); */
+  /* let delta = GeomCollide.rectToRect(vel, rect, Geom.Rect.fromAabb(aabb)); */
+  /* Geom.addVectors(vel, delta) */
+    delta
+  }
+}; */
+
 /* Geom.Rect.collideToAabb(vel, Geom.Rect.ptranslate(rect, move), aabb); */
 /* let collideRect = (rect, vel, move, aabb) => {
   let res = GeomCollide.rectToRect(vel, Geom.Rect.ptranslate(rect, move), Geom.Rect.fromAabb(aabb));

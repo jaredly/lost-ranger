@@ -132,7 +132,10 @@ let start = (env) => {
       left: false, right: false, jump: false, action: false,
     },
     camera,
-    player
+    player,
+    zoom: false,
+    frameByFrame: false,
+    hitByHit: None,
   }
 };
 
@@ -407,8 +410,24 @@ let step = (state, context, env) => {
 };
 
 let step = (state, context, env) => {
+  let state = Reprocessing.Env.keyPressed(Reprocessing.Events.Z, env)
+    ? {...state, zoom: !state.zoom}
+    : state;
   if (state.paused) {
     state
+  } else if (Reprocessing.Env.keyPressed(Reprocessing.Events.F, env)) {
+    {...step(state, context, env), frameByFrame: true}
+  } else if (state.frameByFrame) {
+    if (Reprocessing.Env.keyPressed(Reprocessing.Events.P, env)) {
+      {...state, frameByFrame: false}
+    } else if (Reprocessing.Env.keyPressed(Reprocessing.Events.H, env)) {
+      {...state, hitByHit: switch state.hitByHit {
+      | Some(x) => Some(x + 1)
+      | None => Some(0)
+      }}
+    } else {
+      state
+    }
   } else {
     step(state, context, env)
   }

@@ -379,8 +379,8 @@ let draw = (state, context, env) => {
 
   /* let spots = angleRing(20) |> List.map(theta => ({Geom.magnitude: 100., theta}, circle.Geom.Circle.center)); */
   /* pointRectResponse(env); */
-  circleRectResponse(env);
-  /* rectRectResponse(env); */
+  /* circleRectResponse(env); */
+  rectRectResponse(env);
   /* polyPolyResponse(env); */
 
 };

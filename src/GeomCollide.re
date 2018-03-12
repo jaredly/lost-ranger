@@ -139,6 +139,14 @@ let circleToRect = (vec, circle, rect) => {
  * We're looking for *greatest penetration*, not necessarily
  * greatest impulse response.
  * Not sure if this will play out for any polygon.
+ *
+ * TODO this results in buggy bhavior.
+ * Because if the rect starts collided just a little from the top,
+ * and has e.g. velocity to the left, then we push back to the right.
+ * Now, how we got into the situation where we started in collision
+ * is another question, and might just be due to floating-point
+ * rounding errors. Will need to investigate more if I want to use
+ * this algorith.
 */
 let rectToRect = (vec, r1, r2) => {
   Rect.points(r1)

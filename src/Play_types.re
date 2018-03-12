@@ -111,7 +111,12 @@ type state = {
   lastSavedHighScore: int,
   paused: bool,
   userInput,
-  player
+  player,
+
+  /* For debugging */
+  zoom: bool,
+  frameByFrame: bool,
+  hitByHit: option(int),
 };
 
 type status =
