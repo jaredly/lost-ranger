@@ -409,6 +409,24 @@ let step = (state, context, env) => {
   }
 };
 
+let fillWithRocks = (state, env) => {
+  GeomDebug.range(100) |> List.fold_left((state, i) => {
+    {...state, stones: [
+      {Play_types.Stone.circle: {
+        center: {
+          Geom.x: Random.float(float_of_int(Reprocessing.Env.width(env)) *. 0.8),
+          y: -300. +. Random.float(100.),
+        },
+        rad: Random.float(10.) +. 10.,
+      },
+      vel: Geom.v0,
+      rotation: Random.float(Geom.pi)
+      },
+      ...state.stones
+    ]}
+  }, state)
+};
+
 let step = (state, context, env) => {
   /* Handle resize */
   let state = {
@@ -425,6 +443,8 @@ let step = (state, context, env) => {
     : state;
   if (state.paused) {
     state
+  } else if (Reprocessing.Env.keyPressed(Reprocessing.Events.Q, env)) {
+    fillWithRocks(state, env)
   } else if (Reprocessing.Env.keyPressed(Reprocessing.Events.F, env)) {
     {...step(state, context, env), frameByFrame: true}
   } else if (state.frameByFrame) {

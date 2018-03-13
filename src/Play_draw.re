@@ -398,22 +398,26 @@ let debugPlayerHits = ({player,userInput, blocks, hitByHit}, context, env) => {
 
 };
 
-let drawWorld = (state, context, env) => {
-  Draw.background(Utils.color(~r=200, ~g=230, ~b=255, ~a=255), env);
-  /* Draw.background(Constants.white, env); */
+let drawStones = (state, inPosition, context, env) => {
+  Draw.fill(Reprocessing.Utils.color(~r=150, ~g=150, ~b=170, ~a=255), env);
+  state.stones |> List.iter(stone => {
+    let {Geom.x,y} = stone.Stone.circle.center;
+    switch (inPosition(200., stone.Stone.circle.center)) {
+    | None => ()
+    | Some(pos) => {
+      drawStone(context, pos, stone, env)
+    }
+    };
+  });
+};
+let drawStones = (a, b, c, d) => {
+  Profile.start("drawStones");
+  drawStones(a,b,c,d);
+  Profile.stop("drawStones");
+};
 
+let drawTiles = (state, context, env) => {
   let (dx, dy, w, h) = state.camera;
-
-  /* let zoom = 5.; */
-  let zoom = state.zoom ? 4. : 1.;
-  Draw.translate(~x=-.dx *. zoom, ~y=-.dy *. zoom, env);
-
-  if (state.zoom) {
-    let mpos = Geom.fromIntTuple(Env.mouse(env));
-    let mpos = {Geom.x: w /. 2. -. w /. 8., y: h /. 2. -. h /. 8.};
-    Draw.translate(~x=-.mpos.x*.zoom, ~y=-.mpos.y *. zoom, env);
-    Draw.scale(~x=zoom, ~y=zoom, env);
-  };
 
   let x0 = int_of_float(dx /. blockSize) - 1;
   let y0 = int_of_float(dy /. blockSize);
@@ -452,6 +456,52 @@ let drawWorld = (state, context, env) => {
     }
   };
 
+};
+let drawTiles = (a, b, c) => {
+  Profile.start("drawTiles");
+  drawTiles(a,b,c);
+  Profile.stop("drawTiles");
+};
+
+let drawText = (state, inPosition, context, env) => {
+  state.textPos |> List.iter(((text, pos)) => {
+    switch (inPosition(800., pos)) {
+    | None => ()
+    | Some(pos) => {
+      Draw.tint(Constants.black, env);
+      Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(pos), ~body=text, env);
+      Draw.noTint(env);
+      Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(Geom.addPoints(pos, {Geom.x: -1., y: -1.})), ~body=text, env);
+    }
+    }
+  });
+};
+
+let drawText = (a, b, c, d) => {
+  Profile.start("drawText");
+  drawText(a,b,c, d);
+  Profile.stop("drawText");
+};
+
+let drawWorld = (state, context, env) => {
+  Draw.background(Utils.color(~r=200, ~g=230, ~b=255, ~a=255), env);
+  /* Draw.background(Constants.white, env); */
+
+  let (dx, dy, w, h) = state.camera;
+
+  /* let zoom = 5.; */
+  let zoom = state.zoom ? 4. : 1.;
+  Draw.translate(~x=-.dx *. zoom, ~y=-.dy *. zoom, env);
+
+  if (state.zoom) {
+    let mpos = Geom.fromIntTuple(Env.mouse(env));
+    let mpos = {Geom.x: w /. 2. -. w /. 8., y: h /. 2. -. h /. 8.};
+    Draw.translate(~x=-.mpos.x*.zoom, ~y=-.mpos.y *. zoom, env);
+    Draw.scale(~x=zoom, ~y=zoom, env);
+  };
+
+  drawTiles(state, context, env);
+
   Draw.noStroke(env);
   drawPlayer(state, context, env);
 
@@ -482,31 +532,18 @@ let drawWorld = (state, context, env) => {
     }
   };
 
-  Draw.fill(Reprocessing.Utils.color(~r=150, ~g=150, ~b=170, ~a=255), env);
-  state.stones |> List.iter(stone => {
-    let {Geom.x,y} = stone.Stone.circle.center;
-    switch (inPosition(200., stone.Stone.circle.center)) {
-    | None => ()
-    | Some(pos) => {
-      drawStone(context, pos, stone, env)
-    }
-    };
-  });
+  drawStones(state, inPosition, context, env);
 
-  state.textPos |> List.iter(((text, pos)) => {
-    switch (inPosition(800., pos)) {
-    | None => ()
-    | Some(pos) => {
-      Draw.tint(Constants.black, env);
-      Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(pos), ~body=text, env);
-      Draw.noTint(env);
-      Draw.text(~font=context.Shared.smallFont, ~pos=Geom.intTuple(Geom.addPoints(pos, {Geom.x: -1., y: -1.})), ~body=text, env);
-    }
-    }
-  });
+  drawText(state, inPosition, context, env);
 
 
   /* debugPlayerHits(state, context, env); */
+};
+
+let drawWorld = (a, b, c) => {
+  Profile.start("drawWorld");
+  drawWorld(a, b, c);
+  Profile.stop("drawWorld");
 };
 
 let touchButtons = env => {

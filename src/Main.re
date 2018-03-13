@@ -54,9 +54,15 @@ let setup = (assetDir, env) => {
 };
 
 let draw = ({Shared.screenState, context}, env) => {
+  if (Reprocessing.Env.keyPressed(Reprocessing.Events.Num_1, env)) {
+    Profile.beginProfiling();
+  } else if (Reprocessing.Env.keyPressed(Reprocessing.Events.Num_2, env)) {
+    Profile.endProfiling();
+    Profile.export("./profile_" ++ string_of_float(Unix.gettimeofday()) ++ ".json");
+  };
   open Shared;
-  let screenState = FreePlay.step(screenState, context, env);
-  FreePlay.draw(screenState, context, env);
+  let screenState = Profile.wrap("step", () => FreePlay.step(screenState, context, env));
+  Profile.wrap("draw", () => FreePlay.draw(screenState, context, env));
   {screenState, context}
 };
 
