@@ -26,6 +26,7 @@ let step = (status, context, env) => {
 let touchStart = Play_step.touchStart;
 let touchMove = Play_step.touchMove;
 let touchEnd = Play_step.touchEnd;
+let backPressed = Play_step.backPressed;
 
 let draw = (state, ctx, env) => {
   if (state.Play_types.paused) {

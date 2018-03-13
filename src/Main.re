@@ -71,6 +71,12 @@ let run = (assetDir, _) => Reprocessing.run(
   ~touchStart=run(FreePlay.touchStart),
   ~touchMove=run(FreePlay.touchMove),
   ~touchEnd=run(FreePlay.touchEnd),
+  ~backPressed=({Shared.screenState, context}, env) => {
+    switch (FreePlay.backPressed(screenState, context, env)) {
+    | None => None
+    | Some(newState) => Some({Shared.screenState: newState, context})
+    }
+  },
   ~draw,
   ()
 );

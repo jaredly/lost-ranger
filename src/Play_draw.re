@@ -586,7 +586,7 @@ let draw = (state, context, env) => {
   /* GeomDraw.rect(pauseButton(env), env); */
 
   let pause = pauseButton(env);
-  let bar = Geom.Rect.scale(pause, 0.3, 1.);
+  let bar = Geom.Rect.scale(pause, 0.3, 0.6);
   let left = Geom.Rect.translate(bar, {Geom.x: pause.Geom.Rect.width /. 4., y: 0.});
   let right = Geom.Rect.translate(bar, {Geom.x: -.pause.Geom.Rect.width /. 4., y: 0.});
   GeomDraw.rect(left, env);

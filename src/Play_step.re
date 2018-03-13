@@ -533,3 +533,11 @@ let touchEnd = (state, ctx, env) => {
   };
 }};
 };
+
+let backPressed = (state, context, env) => {
+  if (state.paused) {
+    None
+  } else {
+    Some({...state, paused: true})
+  }
+};
