@@ -58,7 +58,7 @@ let draw = ({Shared.screenState, context}, env) => {
     Profile.beginProfiling();
   } else if (Reprocessing.Env.keyPressed(Reprocessing.Events.Num_2, env)) {
     Profile.endProfiling();
-    Profile.export("./profile_" ++ string_of_float(Unix.gettimeofday()) ++ ".json");
+    Profile.export("./profile_" ++ string_of_float(Profile.getTime()) ++ ".json");
   };
   open Shared;
   let screenState = Profile.wrap("step", () => FreePlay.step(screenState, context, env));

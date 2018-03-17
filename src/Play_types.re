@@ -143,7 +143,7 @@ let hasBlock = (blocks, (x, y)) => {
     false
   } else {
     let maxx = Array.length(blocks[0]) - 1;
-    let x = x < 0 ? maxx + 1 + x : (x > maxx ? x - maxx - 1 : x);
+    let x = x < 0 ? maxx + 1 + x : (x > maxx ? (x mod maxx) - 1 : x);
     blocks[y][x] != None
   }
 };

@@ -266,10 +266,10 @@ let collideStones = stones => {
     let (stone, moved, _, _) = stoneRef.contents;
     let {Geom.Circle.center: {Geom.x}, rad} = moved;
     let leftBox = (x -. rad) /. boxWidth |> floor |> int_of_float;
-    let leftBox = leftBox == -1 ? boxes - 1 : leftBox;
+    let leftBox = leftBox < 0 ? boxes - 1 : leftBox;
     let leftBox = leftBox >= boxes ? 0 : leftBox;
     let rightBox = (x +. rad) /. boxWidth |> floor |> int_of_float;
-    let rightBox = rightBox == -1 ? boxes - 1 : rightBox;
+    let rightBox = rightBox < 0 ? boxes - 1 : rightBox;
     let rightBox = rightBox >= boxes ? 0 : rightBox;
     broad[leftBox] = [stoneRef, ...broad[leftBox]];
     if (leftBox != rightBox) {

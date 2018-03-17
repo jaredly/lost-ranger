@@ -6,6 +6,9 @@ type node = {
   mutable tail: node
 };
 
+let getTime = () => 0.;
+/* let getTime = () => Unix.gettimeofday(); */
+
 let rec dummy = {name: "", start: false, ts: 0., tail: dummy};
 
 type root = {head: node, mutable rtail: node};
@@ -25,7 +28,7 @@ let profiling = ref(false);
 
 let start = (name) => {
   if (profiling^) {
-    let node = {name, start: true, ts: Unix.gettimeofday(), tail: dummy};
+    let node = {name, start: true, ts: getTime(), tail: dummy};
     root.rtail.tail = node;
     root.rtail = node;
   }
@@ -33,7 +36,7 @@ let start = (name) => {
 
 let stop = (name) => {
   if (profiling^) {
-    let node = {name, start: false, ts: Unix.gettimeofday(), tail: dummy};
+    let node = {name, start: false, ts: getTime(), tail: dummy};
     root.rtail.tail = node;
     root.rtail = node;
   }
@@ -43,6 +46,7 @@ let wrap = (name, fn) => {
   start(name);let res = fn();stop(name);res
 };
 
+/** Follows this format https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/edit */
 let beginProfiling = () => profiling := true;
 let endProfiling = () => profiling := false;
 let nodeToJsonString = ({name, ts, start}) => Printf.sprintf({|{"name": %S, "ts": %d, "ph": %S, "tid": 0, "pid": 0}|}, name, int_of_float(ts *. 1000000.), start ? "B" : "E");
